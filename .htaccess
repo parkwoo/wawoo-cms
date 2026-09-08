@@ -1,0 +1,53 @@
+RewriteEngine On
+
+# Block direct access to sensitive files.
+<FilesMatch "^(\.env|config\.local\.php|composer\.(json|lock)|README\.md|CHANGELOG\.md|VERSION)$">
+    Require all denied
+</FilesMatch>
+
+# Block direct access to the core/ directory (still reachable via require,
+# but never by the web).
+<IfModule mod_authz_core.c>
+    <FilesMatch "(core|src)\.php$">
+        Require all denied
+    </FilesMatch>
+</IfModule>
+
+# Pretty URLs — everything goes through the router; the router serves
+# static files, core routes (/post /cat /tag), and delegates plugin pages
+# (rss, search, admin, sitemap, ...) to dispatch.php.
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^post/([a-zA-Z0-9_-]+)/?$ post.php?slug=$1 [L,QSA]
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^cat/([^/]+)/?$     index.php?cat=$1 [L,QSA]
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^tag/([^/]+)/?$     index.php?tag=$1 [L,QSA]
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$              router.php [L,QSA]
+
+# Cache static assets aggressively.
+<IfModule mod_expires.c>
+    ExpiresActive On
+    ExpiresByType image/jpeg "access plus 30 days"
+    ExpiresByType image/png  "access plus 30 days"
+    ExpiresByType image/svg+xml "access plus 30 days"
+    ExpiresByType text/css   "access plus 7 days"
+    ExpiresByType application/javascript "access plus 7 days"
+</IfModule>
+
+# Compression.
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/html text/plain text/css application/javascript application/json
+</IfModule>
+
+# Security headers.
+<IfModule mod_headers.c>
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set X-Frame-Options "SAMEORIGIN"
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+    Header always set Permissions-Policy "geolocation=(), microphone=(), camera=()"
+</IfModule>

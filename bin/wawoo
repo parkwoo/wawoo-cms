@@ -1,0 +1,239 @@
+#!/usr/bin/env php
+<?php
+/**
+ * wawoo-cms command-line interface.
+ *
+ * Designed to be friendly for AI agents: every command prints machine
+ * parsable one-line summaries and never prompts.
+ *
+ * Usage:
+ *   php bin/wawoo list                    list published posts (slug | date | title)
+ *   php bin/wawoo list --all              include drafts
+ *   php bin/wawoo post:new <slug> [--title "T"] [--category C] [--tags a,b]
+ *   php bin/wawoo page:new <slug> [--title "T"]
+ *   php bin/wawoo make:plugin <name>      scaffold a plugin directory
+ *   php bin/wawoo make:theme <name>       scaffold a theme directory
+ *   php bin/wawoo cache:clear             flush the file cache
+ *   php bin/wawoo doctor                  environment & config self-check
+ */
+
+declare(strict_types=1);
+
+error_reporting(E_ALL);
+ini_set('display_errors', '1');
+
+$root = dirname(__DIR__);
+
+require $root . '/includes/core/Bootstrap.php';
+\Wawoo\Core\Bootstrap::init($root);
+
+use Wawoo\Core\Cache;
+use Wawoo\Core\Pages;
+use Wawoo\Core\Posts;
+
+$args = array_slice($argv, 1);
+$cmd  = $args[0] ?? 'help';
+
+function usage(): void
+{
+    echo "wawoo-cms CLI\n\n"
+        . "  list [--all]                       list posts (slug | date | title)\n"
+        . "  pages                              list fixed pages\n"
+        . "  post:new <slug> [opts]             create a post bundle\n"
+        . "  page:new <slug> [opts]             create a fixed page\n"
+        . "  status <slug> <state> [--at TIME]  set draft|published|scheduled\n"
+        . "  publish:due                        promote scheduled posts that are due\n"
+        . "  make:plugin <name>                 scaffold a plugin\n"
+        . "  make:theme <name>                  scaffold a theme\n"
+        . "  cache:clear                        flush file cache\n"
+        . "  doctor                             environment self-check\n";
+}
+
+function option(array $args, string $long): string
+{
+    foreach ($args as $i => $a) {
+        if ($a === $long && isset($args[$i + 1])) {
+            return $args[$i + 1];
+        }
+        if (strpos($a, $long . '=') === 0) {
+            return substr($a, strlen($long) + 1);
+        }
+    }
+    return '';
+}
+
+function flag(array $args, string $long): bool
+{
+    return in_array($long, $args, true);
+}
+
+function slug(string $s): string
+{
+    $s = preg_replace('/[^a-zA-Z0-9_-]/', '-', trim($s));
+    $s = trim((string)$s, '-');
+    return strtolower($s);
+}
+
+function writeBundle(string $dir, string $slug, string $frontmatter, string $body): void
+{
+    if (!is_dir($dir)) {
+        mkdir($dir, 0755, true);
+    }
+    $file = $dir . '/index.md';
+    if (file_exists($file)) {
+        fwrite(STDERR, "error: {$file} already exists\n");
+        exit(1);
+    }
+    file_put_contents($file, "---\n" . $frontmatter . "---\n\n" . $body);
+    echo "created {$file}\n";
+}
+
+switch ($cmd) {
+    case 'list':
+        $all  = flag($args, '--all');
+        $posts = Posts::all($all);
+        if ($posts === []) {
+            echo "(no posts)\n";
+            break;
+        }
+        foreach ($posts as $p) {
+            echo $p['slug'] . ' | ' . $p['date'] . ' | ' . $p['title'] . "\n";
+        }
+        break;
+
+    case 'pages':
+        $pages = Pages::all();
+        if ($pages === []) {
+            echo "(no pages)\n";
+            break;
+        }
+        foreach ($pages as $p) {
+            echo $p['slug'] . ' | ' . $p['title'] . "\n";
+        }
+        break;
+
+    case 'status':
+        $slug = slug($args[1] ?? '');
+        $state = strtolower($args[2] ?? '');
+        if ($slug === '' || !in_array($state, ['draft', 'published', 'scheduled'], true)) {
+            fwrite(STDERR, "usage: status <slug> <draft|published|scheduled> [--at \"2026-09-10 09:00\"]\n");
+            exit(1);
+        }
+        $at = $state === 'scheduled' ? option($args, '--at') : '';
+        $res = Posts::setStatus($slug, $state, $at);
+        if ($res === null) {
+            fwrite(STDERR, "error: could not set status on '$slug'\n");
+            exit(1);
+        }
+        echo "$slug -> $res\n";
+        break;
+
+    case 'publish:due':
+        $due = Posts::due();
+        echo $due === [] ? "(nothing due)\n" : "published: " . implode(', ', $due) . "\n";
+        break;
+
+    case 'post:new':
+    case 'page:new':
+        $slug = slug($args[1] ?? '');
+        if ($slug === '') {
+            fwrite(STDERR, "usage: $cmd <slug> [--title \"T\"]\n");
+            exit(1);
+        }        $title    = option($args, '--title') ?: ucfirst(str_replace('-', ' ', $slug));
+        $isPost   = $cmd === 'post:new';
+        $category = option($args, '--category') ?: 'General';
+        $tags     = array_filter(array_map('trim', explode(',', option($args, '--tags'))));
+        $fm       = "title: {$title}\ndate: " . date('Y-m-d')
+            . ($isPost ? "\ncategory: {$category}" : '')
+            . ($tags !== [] ? "\ntags: [" . implode(', ', $tags) . ']' : '')
+            . "\nstatus: published\n";
+        $base = $isPost ? POSTS_DIR : PAGES_DIR;
+        writeBundle($base . $slug, $slug, $fm, "Write your content here.\n");
+        if ($isPost) {
+            Cache::flush();
+        }
+        break;
+
+    case 'make:plugin':
+        $name = slug($args[1] ?? '');
+        if ($name === '') {
+            fwrite(STDERR, "usage: make:plugin <name>\n");
+            exit(1);
+        }
+        $ns = 'Wawoo\\Plugin\\' . implode('', array_map('ucfirst', explode('-', $name)));
+        $dir = PLUGINS_DIR . $name;
+        if (is_dir($dir)) {
+            fwrite(STDERR, "error: {$dir} already exists\n");
+            exit(1);
+        }
+        mkdir($dir . '/src', 0755, true);
+        file_put_contents($dir . '/plugin.json', json_encode([
+            'name'      => $name,
+            'type'      => 'plugin',
+            'version'   => '1.0.0',
+            'namespace' => $ns,
+            'entry'     => 'Plugin',
+            'requires'  => ['core' => '>=1.0.0'],
+            'hooks'     => new stdClass(),
+            'config'    => new stdClass(),
+        ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . "\n");
+        file_put_contents($dir . '/src/Plugin.php', "<?php\nnamespace {$ns};\n\nfinal class Plugin\n{\n    public function boot(): void\n    {\n    }\n}\n");
+        echo "created {$dir}/plugin.json\ncreated {$dir}/src/Plugin.php\n";
+        break;
+
+    case 'make:theme':
+        $name = slug($args[1] ?? '');
+        if ($name === '') {
+            fwrite(STDERR, "usage: make:theme <name>\n");
+            exit(1);
+        }
+        $ns = 'Wawoo\\Theme\\' . implode('', array_map('ucfirst', explode('-', $name)));
+        $dir = THEMES_DIR . $name;
+        if (is_dir($dir)) {
+            fwrite(STDERR, "error: {$dir} already exists\n");
+            exit(1);
+        }
+        mkdir($dir . '/templates', 0755, true);
+        mkdir($dir . '/assets/css', 0755, true);
+        file_put_contents($dir . '/theme.json', json_encode([
+            'name'      => $name,
+            'type'      => 'theme',
+            'version'   => '1.0.0',
+            'namespace' => $ns,
+            'entry'     => 'Plugin',
+            'requires'  => ['core' => '>=1.0.0'],
+            'hooks'     => new stdClass(),
+            'config'    => new stdClass(),
+        ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . "\n");
+        file_put_contents($dir . '/templates/index.php', "<h1>New theme: {$name}</h1>\n");
+        file_put_contents($dir . '/assets/css/style.css', "/* {$name} */\n");
+        echo "created {$dir}/theme.json\n";
+        break;
+
+    case 'cache:clear':
+        Cache::flush();
+        echo "cache cleared\n";
+        break;
+
+    case 'doctor':
+        $ok = true;
+        $checks = [
+            'PHP >= 8.1'         => version_compare(PHP_VERSION, '8.1.0', '>='),
+            'POSTS_DIR writable' => is_writable(POSTS_DIR) || is_dir(POSTS_DIR),
+            'CACHE_DIR writable' => is_writable(CACHE_DIR) || is_dir(CACHE_DIR),
+            'config.local.php'   => is_file($root . '/config.local.php'),
+        ];
+        foreach ($checks as $label => $pass) {
+            echo ($pass ? 'ok   ' : 'FAIL ') . $label . "\n";
+            $ok = $ok && $pass;
+        }
+        echo 'plugins dir: ' . PLUGINS_DIR . "\n";
+        echo 'themes  dir: ' . THEMES_DIR . "\n";
+        echo 'posts   dir: ' . POSTS_DIR . "\n";
+        echo 'pages   dir: ' . (defined('PAGES_DIR') ? PAGES_DIR : '(n/a)') . "\n";
+        exit($ok ? 0 : 1);
+
+    default:
+        usage();
+        exit(0);
+}

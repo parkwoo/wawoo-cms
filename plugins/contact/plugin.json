@@ -1,0 +1,59 @@
+{
+    "name": "contact",
+    "type": "plugin",
+    "version": "1.0.0",
+    "namespace": "Wawoo\\Plugin\\Contact",
+    "entry": "Plugin",
+    "settings": true,
+    "requires": {
+        "core": ">=1.0.0"
+    },
+    "hooks": {
+        "core.request": "Page"
+    },
+    "config": {
+        "title": "Contact us",
+        "intro": "Fill in the form and we will get back to you.",
+        "recipient_email": "",
+        "mail_subject_prefix": "[Contact] ",
+        "enable_mail": false,
+        "save_inbox": true,
+        "max_attempts": 5,
+        "rate_window": 3600,
+        "info": {
+            "address": "",
+            "phone": "",
+            "email": "",
+            "hours": ""
+        },
+        "labels": {
+            "home": "Home",
+            "type": "Topic",
+            "type_product": "Product inquiry",
+            "type_business": "Business inquiry",
+            "type_media": "Media inquiry",
+            "type_other": "Other",
+            "name": "Name",
+            "email": "Email",
+            "company": "Company",
+            "message": "Message",
+            "privacy": "I agree to the privacy policy.",
+            "submit": "Send message",
+            "info_title": "Contact information",
+            "info_address": "Address",
+            "info_phone": "Phone",
+            "info_email": "Email",
+            "info_hours": "Hours",
+            "error_name_required": "Please enter your name.",
+            "error_email_required": "Please enter your email address.",
+            "error_email_invalid": "Please enter a valid email address.",
+            "error_message_required": "Please enter a message.",
+            "error_message_too_long": "Your message must be 2000 characters or fewer.",
+            "error_privacy_required": "Please accept the privacy policy.",
+            "error_csrf": "Your session has expired. Please try again.",
+            "error_rate_limited": "Too many messages. Please try again later.",
+            "error_send_failed": "Sorry, your message could not be sent. Please try again later.",
+            "success_message": "Thank you. Your message has been sent and we will get back to you soon."
+        }
+    }
+}

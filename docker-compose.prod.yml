@@ -1,0 +1,20 @@
+# Example production override.
+# Copy to docker-compose.override.yml or pass with -f.
+services:
+  wawoo:
+    image: ghcr.io/your-org/wawoo-cms:1.0.0
+    ports:
+      - "127.0.0.1:8080:80"  # bind to localhost only; proxy in front
+    environment:
+      WAWOO_ENV: production
+      TZ: Asia/Tokyo
+      # When a TLS-terminating reverse proxy fronts this container, PHP must
+      # only send the session cookie over HTTPS. Either pass the real scheme
+      # through (proxy_set_header X-Forwarded-Proto https) or force it here.
+      PHP_VALUE: "session.cookie_secure=1"
+    read_only: true
+    tmpfs:
+      - /tmp
+      - /var/www/html/cache
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]

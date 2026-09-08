@@ -1,0 +1,15 @@
+{
+    "name": "seo",
+    "type": "plugin",
+    "version": "1.0.0",
+    "namespace": "Wawoo\\Plugin\\Seo",
+    "entry": "Plugin",
+    "requires": {
+        "core": ">=1.0.0"
+    },
+    "hooks": {
+        "theme.head": "MetaHandler",
+        "core.request": "Sitemap"
+    },
+    "config": {}
+}

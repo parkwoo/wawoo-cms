@@ -1,0 +1,33 @@
+services:
+  wawoo:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        BUILDKIT_INLINE_CACHE: 1
+    image: wawoo-cms:latest
+    container_name: wawoo-cms
+    restart: unless-stopped
+    ports:
+      - "8082:80"
+    volumes:
+      - ./posts:/var/www/html/posts:ro
+      - ./pages:/var/www/html/pages:ro
+      - ./themes:/var/www/html/themes:ro
+      - ./plugins:/var/www/html/plugins:ro
+      - ./uploads:/var/www/html/uploads:ro
+      - ./config.local.php:/var/www/html/config.local.php:ro
+      - wawoo_cache:/var/www/html/cache
+    environment:
+      WAWOO_ENV: production
+      TZ: UTC
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost/sitemap.xml"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+    # Example: put a reverse proxy / TLS terminator in front of this.
+
+volumes:
+  wawoo_cache:

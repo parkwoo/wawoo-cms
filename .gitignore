@@ -1,0 +1,14 @@
+config.local.php
+cache/
+*.log
+.DS_Store
+
+# Test sandboxes & reports
+tests/_tmp/
+tests/coverage/
+tests/coverage.txt
+.phpunit.cache/
+.phpunit.result.cache
+
+# Plugin runtime data (comments PII, TOTP secrets, rate-limit state)
+plugins/*/data/

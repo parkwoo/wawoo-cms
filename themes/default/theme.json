@@ -1,0 +1,15 @@
+{
+    "name": "default",
+    "type": "theme",
+    "version": "1.0.0",
+    "namespace": "",
+    "entry": "",
+    "requires": {
+        "core": ">=1.0.0"
+    },
+    "hooks": {},
+    "config": {
+        "color": "#212529",
+        "font": "system-ui, sans-serif"
+    }
+}
