@@ -68,6 +68,19 @@ flowchart LR
     D --> E
 ```
 
+## A code example
+
+Fenced code blocks get a language label and horizontal scrolling:
+
+```php
+<?php
+// fetch the three most recent posts and print their titles
+foreach (\Wawoo\Core\Posts::all() as $i => $post) {
+    if ($i >= 3) { break; }
+    echo $post['title'] . "\n";
+}
+```
+
 ## Next steps
 
 - Run `php bin/wawoo doctor` to check the environment.

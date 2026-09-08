@@ -68,6 +68,17 @@ flowchart LR
     D --> E
 ```
 
+## コード例
+
+フェンス付きコードブロックには言語ラベルと横スクロールが付きます。
+```php
+<?php
+foreach (\Wawoo\Core\Posts::all() as $i => $post) {
+    if ($i >= 3) { break; }
+    echo $post["title"] . "\n";
+}
+```
+
 ## 次のステップ
 
 - `php bin/wawoo doctor` で環境を確認

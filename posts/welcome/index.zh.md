@@ -63,6 +63,17 @@ flowchart LR
     D --> E
 ```
 
+## 代码示例
+
+围栏代码块带有语言标签与横向滚动。
+```php
+<?php
+foreach (\Wawoo\Core\Posts::all() as $i => $post) {
+    if ($i >= 3) { break; }
+    echo $post["title"] . "\n";
+}
+```
+
 ## 下一步
 
 - 运行 `php bin/wawoo doctor` 检查环境
