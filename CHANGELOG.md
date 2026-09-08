@@ -6,6 +6,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Repository split
+- wawoo-cms is now the **core-only monorepo**: core plugins (`admin`,
+  `rss`, `search`, `seo`, `menu`, `contact`) and the `default` theme ship
+  here; all tests target core only (176 PHPUnit tests / 438 assertions).
+- Optional plugins moved to standalone repos
+  `wawoo-plugin-pagination`, `-analytics`, `-password-gate`,
+  `-maintenance`, `-comments`, `-tag-cloud`, `-sitemap-html`, `-i18n`,
+  `-admin-totp`, `-mlang`, `-publish`, `-s3`; the `clay` theme moved to
+  `wawoo-theme-clay`.
+- New CLI: `php bin/wawoo plugin:link <repo> [--copy]` /
+  `theme:link <repo> [--copy]` install a standalone plugin/theme repo
+  into this checkout (symlink by default, `--copy` for Docker images).
+  Plugin manifests/hooks contract is unchanged; optional-plugin tests run
+  from this repo after linking (`phpunit tests/Plugin/<Name>*Test.php`).
+- `config.example.php` default `ENABLED_PLUGINS` = core set; optional
+  plugins are enabled per site after `plugin:link`.
+
 ### Security
 - **Comments & admin-TOTP runtime data moved into `cache/`** (comments →
   `cache/comments/`, TOTP/rate state → `cache/admin-totp/`), which is the

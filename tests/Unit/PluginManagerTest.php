@@ -23,7 +23,7 @@ final class PluginManagerTest extends TestCase
         $root = dirname(__DIR__, 2);
         $plugins = PluginManager::discoverPlugins($root);
         $names = array_column($plugins, 'name');
-        foreach (['seo', 'analytics', 'comments', 'i18n'] as $expected) {
+        foreach (['seo', 'rss', 'search', 'menu', 'contact', 'admin'] as $expected) {
             $this->assertContains($expected, $names);
         }
     }
@@ -34,7 +34,6 @@ final class PluginManagerTest extends TestCase
         $themes = PluginManager::discoverThemes($root);
         $names = array_column($themes, 'name');
         $this->assertContains('default', $names);
-        $this->assertContains('clay', $names);
     }
 
     public function testEnabledPluginsPersistAcrossInstances(): void

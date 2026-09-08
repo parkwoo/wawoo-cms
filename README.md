@@ -23,7 +23,7 @@ What makes it agent-friendly:
   don't need, or read the enabled list in one glance from
   `config.local.php`.
 
-**Version:** 1.0.0 · **Tests:** 320 PHPUnit · **PHP files:** 84+ · **Lines:** ~7,000
+**Version:** 1.0.0 · **Tests:** 176 PHPUnit · **PHP files:** 84+ · **Lines:** ~9,400
 
 ## Layout
 
@@ -44,34 +44,27 @@ wawoo-cms/
 │   ├── Parsedown.php          markdown parser (vendored)
 │   └── core/                  bootstrap, hooks, manifests, autoloader, cache
 ├── themes/
-│   ├── default/               GitHub-flavoured light/dark theme
-│   └── clay/                  Claymorphism style theme
+│   └── default/               GitHub-flavoured light/dark theme
 ├── plugins/
 │   ├── admin/                 /admin console (posts, plugins, themes)  [core]
 │   ├── rss/                   /rss feed + nav/head links               [core]
 │   ├── search/                /search page                              [core]
 │   ├── seo/                   meta + /sitemap.xml + /robots.txt         [core]
 │   ├── menu/                  navigation menu editor                    [core]
-│   ├── contact/               /contact inquiry form (CSRF + inbox)      [core]
-│   ├── analytics/             Google Analytics injector               [optional]
-│   ├── pagination/            numbered pagination (1 2 3 …)           [optional]
-│   ├── password-gate/         site-wide password gate                 [optional]
-│   ├── maintenance/           maintenance-mode page (503+Retry-After) [optional]
-│   ├── comments/              comment form + moderation                 [optional]
-│   ├── tag-cloud/             font-sized tag cloud                      [optional]
-│   ├── sitemap-html/          human-readable /sitemap-page             [optional]
-│   ├── i18n/                  UI translation (en/ja/zh) + Settings      [optional]
-│   ├── mlang/                 multi-language content (/ja/post/x, …)    [optional]
-│   ├── publish/               publish workflow + scheduled publishing   [optional]
-│   ├── s3/                    S3-compatible object storage sync         [optional]
-│   └── admin-totp/            TOTP second factor for /admin             [optional]
-├── tests/                     PHPUnit suite (320 tests)
+│   └── contact/               /contact inquiry form (CSRF + inbox)      [core]
+├── tests/                     PHPUnit suite (176 tests)
 ├── Dockerfile                 PHP 8.3 Apache, opcache tuned
 ├── docker-compose.yml         development compose
 ├── docker-compose.prod.yml    production compose
 ├── .htaccess                  Apache rewrite + security headers
 └── cache/                     generated cache
 ```
+
+This repo ships the core only. Optional plugins and the `clay` theme are
+separate repositories (`wawoo-plugin-*`, `wawoo-theme-clay`) that are
+installed into `plugins/` / `themes/` with
+`php bin/wawoo plugin:link` / `theme:link` — see the
+[Plugins](#plugins) section.
 
 ## Quick start
 
@@ -125,39 +118,26 @@ rename the page or disable the plugin to avoid surprises.
 
 ## Multi-language
 
-Two optional plugins work together for bilingual/multilingual sites:
+Multi-language support ships as optional plugins (see
+[Optional plugins](#optional-plugins)), both off by default:
 
-- **`i18n`** translates the **interface** (theme nav, buttons, admin
-  console) into `en`/`ja`/`zh`. Templates call `t('nav.home', 'Home')` —
-  when the plugin is off the English default is used, when it is on the
-  active language's value is returned. Language is chosen via the nav
-  `?lang=` switcher, a cookie, or the browser's `Accept-Language`
-  (configurable under `/admin → Plugins → i18n → Settings`).
-- **`mlang`** translates the **content**. Keep the default-language
-  bundle as usual and add per-language files in the same folder:
+- **Content** — `wawoo-plugin-mlang` serves per-language bundles
+  (`posts/<slug>/index.ja.md`, …) at `/ja/post/<slug>` (fixed pages at
+  `/ja/<slug>`), falling back to the default language when a translation
+  is missing.
+- **Interface** — `wawoo-plugin-i18n` translates theme nav, buttons and
+  the admin console into `en`/`ja`/`zh`; templates call `t('nav.home',
+  'Home')`, which returns the English default when the plugin is off.
 
-  ```
-  posts/hello-world/
-      index.md          ← default language (e.g. English)
-      index.ja.md       ← Japanese
-      index.zh.md       ← Chinese
-  ```
-
-  Japanese is then served at `/ja/post/hello-world`, Chinese at
-  `/zh/post/hello-world` (fixed pages: `/ja/about`, …). Missing
-  translations fall back to the default-language content. The blog list,
-  feeds and sitemap only ever show the default-language entries — never
-  duplicates.
-
-Both plugins are optional and off by default; enable them in
-`config.local.php` or `/admin → Plugins`.
+Install via `php bin/wawoo plugin:link` and enable in `config.local.php`
+or `/admin → Plugins`.
 
 ## Publishing workflow
 
-Posts have a three-state lifecycle. The `publish` plugin (optional,
-enabled in `/admin → Plugins`) makes the states usable from the admin
-console and adds time-based publishing; the states themselves live in the
-frontmatter and always apply:
+Posts have a three-state lifecycle. The `publish` plugin (optional —
+ships as `wawoo-plugin-publish`, enabled in `/admin → Plugins`) makes the
+states usable from the admin console and adds time-based publishing; the
+states themselves live in the frontmatter and always apply:
 
 - `status: draft` — private. An AI or author writes the post as a draft;
   it is not listed, linked or served publicly. This is the "awaiting
@@ -183,10 +163,11 @@ php bin/wawoo publish:due                          # promote due posts now
 
 ## Object storage (S3)
 
-The `s3` plugin (optional) moves post/page media to an S3-compatible
-bucket and serves it from there. It works with AWS S3, Cloudflare R2,
-MinIO and any S3 API implementation — the SigV4 client is pure PHP
-(stream sockets), so no SDK, composer or curl extension is needed.
+The `s3` plugin (optional, ships as `wawoo-plugin-s3`) moves post/page
+media to an S3-compatible bucket and serves it from there. It works with
+AWS S3, Cloudflare R2, MinIO and any S3 API implementation — the SigV4
+client is pure PHP (stream sockets), so no SDK, composer or curl
+extension is needed.
 Requests are signed with your Access Key / Secret Key and connect to the
 **verified public IP** with TLS certificate/SNI verification against the
 configured hostname, so DNS rebinding cannot redirect traffic to an
@@ -262,8 +243,6 @@ can claim their paths (a plugin page that is disabled returns 404).
 | `/rss`               | `rss` plugin                     |
 | `/sitemap.xml`       | `seo` plugin (XML sitemap)       |
 | `/robots.txt`        | `seo` plugin                     |
-| `/sitemap-page`      | `sitemap-html` plugin            |
-| `/password`          | `password-gate` plugin           |
 | `/admin`             | `admin` plugin                   |
 | `/themes/...`        | static asset                     |
 | `/posts/...`         | static asset                     |
@@ -292,7 +271,7 @@ server {
 
 Serving static files safely: the web server must never serve `cache/`,
 `includes/`, `plugins/`, `*.md` or `*.json` verbatim — cache files hold
-draft lists, contact/comments inboxes and plugin settings, and markdown
+draft lists, form/comment inboxes and plugin settings, and markdown
 includes unpublished drafts. The shipped `router.php` already restricts
 static passthrough to theme assets, uploads and post/page bundle media
 (via `includes/core/PublicAssets.php`), and the shipped `.htaccess`
@@ -315,13 +294,17 @@ Activate a theme by adding its name to `ENABLED_THEMES` in
 
 ### Shipped themes
 
-- **default** — GitHub-flavoured light/dark mode styling.
+- **default** — GitHub-flavoured light/dark mode styling. Ships in this
+  repo.
 - **clay** — Claymorphism style ported from hirameki-loto's blog module.
+  Lives in its own repository (`wawoo-theme-clay`); install it with
+  `php bin/wawoo theme:link /home/git/wawoo-theme-clay` (add `--copy`
+  for Docker builds) before enabling it in `ENABLED_THEMES`.
 
 ### Theme hooks
 
 - `theme.head`       — pass-by-ref array `['title','description','type','canonical']`
-- `theme.head.after` — emit extra `<head>` content (analytics, i18n lang switcher etc.)
+- `theme.head.after` — emit extra `<head>` content (analytics scripts, i18n lang switcher, …)
 - `theme.footer`     — emit extra markup before `</body>`
 - `theme.index.after`, `theme.post.after`, `theme.search.after`, `theme.admin.after`
 
@@ -346,28 +329,49 @@ Manifest fields:
 
 Version constraints support: `>=`, `>`, `<=`, `<`, `=`, `!=`, `*`, bare.
 
-### Shipped plugins
+### Core plugins (shipped in this repo)
 
-| Plugin        | Description                                                  |
-|---------------|--------------------------------------------------------------|
-| `admin`       | `/admin` console: session login, post toggle/delete, plugin/theme management, per-plugin Settings |
-| `rss`         | `/rss` feed (RSS 2.0) + nav/head links                       |
-| `search`      | `/search` full-text page                                     |
-| `seo`         | Meta trimming + `/sitemap.xml` + `/robots.txt`               |
-| `analytics`   | Google Analytics injector                                    |
-| `pagination`  | Numbered pagination (1 2 3 … with ellipsis) on list, category, tag and search pages; falls back to plain Prev/Next when disabled |
-| `contact`     | `/contact` inquiry form: CSRF, session + IP rate limit, honeypot, configurable labels, inbox archive under `cache/contact/`, optional `mail()` delivery; Settings page under `/admin → Plugins → contact → Settings` |
-| `menu`        | Navigation menu editor. `/admin → Plugins → menu → Settings` lets you order Home, fixed pages and categories and add custom links; the menu renders via the `theme.nav.items` filter and replaces the theme's default nav only when a menu is saved. |
-| `password-gate`| Optional site-wide password gate (OFF by default). Enable + set a password in `/admin → Plugins → password-gate → Settings`. IP rate-limited, HMAC cookie. |
-| `maintenance` | Optional maintenance mode (OFF by default). Serve a maintenance page with HTTP 503 + `Retry-After` (SEO friendly) and enter via password. Configure in `/admin → Plugins → maintenance → Settings`. |
-| `comments`    | Comment form + admin moderation queue, rate-limited          |
-| `tag-cloud`   | Font-sized tag cloud rendered on the index                   |
-| `sitemap-html`| Paginated human-readable HTML sitemap at `/sitemap-page`     |
-| `i18n`        | UI translation for themes & admin console (en/ja/zh): template `t()` helper with English fallback, nav language switcher, language detection, Settings page under `/admin → Plugins → i18n → Settings` |
-| `mlang`       | Multi-language content: per-bundle translations `posts/<slug>/index.ja.md`, served at `/ja/post/<slug>` (pages at `/ja/<slug>`); missing translations fall back to the default language; "other languages" links rendered on posts/pages. Enable alongside `i18n` for translated UI text. |
-| `publish`     | Publish workflow + scheduled publishing. A post in `draft` is private; `published` is public; `scheduled` + `publish_at` becomes public automatically once the time passes (checked on every request, so no cron needed — or run `php bin/wawoo publish:due` from cron). Admin console offers Publish / Schedule / Toggle per post. |
-| `s3`          | S3-compatible object storage (AWS S3, Cloudflare R2, MinIO, …). Syncs post/page media (`posts/<slug>/…`, `pages/<slug>/…`, `uploads/…`) to a bucket with a pure-PHP SigV4 client (no SDK/curl), then rewrites content URLs to the object-storage public base at render time. Configure credentials + endpoint in `/admin → Plugins → s3 → Settings` and press **Save & sync**. |
-| `admin-totp`  | Password + RFC 6238 TOTP (Google Authenticator compatible) second factor for `/admin`, backup codes |
+The six core plugins ship under `plugins/` and are enabled by default:
+
+| Plugin    | Description                                                                  |
+|-----------|------------------------------------------------------------------------------|
+| `admin`   | `/admin` console: session login, post toggle/delete, plugin/theme management, per-plugin Settings |
+| `rss`     | `/rss` feed (RSS 2.0) + nav/head links                                       |
+| `search`  | `/search` full-text page                                                     |
+| `seo`     | Meta trimming + `/sitemap.xml` + `/robots.txt`                               |
+| `menu`    | Navigation menu editor. `/admin → Plugins → menu → Settings` lets you order Home, fixed pages and categories and add custom links; the menu renders via the `theme.nav.items` filter and replaces the theme's default nav only when a menu is saved. |
+| `contact` | `/contact` inquiry form: CSRF, session + IP rate limit, honeypot, configurable labels, inbox archive under `cache/contact/`, optional `mail()` delivery; Settings page under `/admin → Plugins → contact → Settings` |
+
+### Optional plugins
+
+Everything else is an optional plugin in its own repository. Each lives
+at `wawoo-plugin-<name>` and is linked into this repo's `plugins/` with
+`plugin:link`, then enabled (all OFF by default) in `config.local.php`
+`ENABLED_PLUGINS` or via `/admin → Plugins`:
+
+- `wawoo-plugin-pagination` — numbered pagination (1 2 3 … with ellipsis)
+- `wawoo-plugin-analytics` — Google Analytics injector
+- `wawoo-plugin-password-gate` — site-wide password gate (rate-limited, HMAC cookie)
+- `wawoo-plugin-maintenance` — maintenance mode: 503 + `Retry-After` page
+- `wawoo-plugin-comments` — comment form + admin moderation queue
+- `wawoo-plugin-tag-cloud` — font-sized tag cloud on the index
+- `wawoo-plugin-sitemap-html` — human-readable HTML sitemap at `/sitemap-page`
+- `wawoo-plugin-i18n` — UI translation (en/ja/zh) via a `t()` template helper
+- `wawoo-plugin-mlang` — multi-language content (`/ja/post/<slug>`, …)
+- `wawoo-plugin-admin-totp` — TOTP second factor for `/admin`
+- `wawoo-plugin-publish` — publish workflow + scheduled publishing
+- `wawoo-plugin-s3` — S3-compatible object storage sync
+
+```bash
+cd /path/to/wawoo-cms
+php bin/wawoo plugin:link /home/git/wawoo-plugin-comments   # symlink
+php bin/wawoo plugin:link /home/git/wawoo-plugin-s3 --copy # copy (Docker)
+```
+
+Themes work the same way: `default` ships in this repo, and the `clay`
+theme is installed with
+`php bin/wawoo theme:link /home/git/wawoo-theme-clay` (add `--copy` for
+Docker), then enabled via `ENABLED_THEMES`.
 
 ### Available hooks
 
@@ -379,9 +383,9 @@ Version constraints support: `>=`, `>`, `<=`, `<`, `=`, `!=`, `*`, bare.
 - `post.before_render`  — fires before `post.php` template renders
 - `search.before_render`— fires before `search` plugin renders
 - `admin.before_render` — fires before admin dashboard renders
-- `admin.authed`        — fires once admin is authenticated (TOTP setup etc.)
+- `admin.authed`        — fires once admin is authenticated
 - `theme.head`          — pass-by-ref meta array
-- `theme.nav`           — emit nav links (rss plugin, i18n switcher)
+- `theme.nav`           — emit nav links (rss plugin; i18n switcher when installed)
 - `theme.nav.items`     — filter: menu plugin replaces the default Home+categories nav with its own HTML when a menu is saved
 - `theme.head.after`    — emit `<head>` content
 - `theme.footer`        — emit before `</body>`
@@ -422,7 +426,7 @@ Then enable it:
 
 ```php
 // config.local.php
-define('ENABLED_PLUGINS', ['seo', 'analytics', 'hello']);
+define('ENABLED_PLUGINS', ['rss', 'seo', 'hello']);
 ```
 
 ## Admin
@@ -432,9 +436,9 @@ then visit `/admin/` (the `admin` plugin must be enabled in
 `ENABLED_PLUGINS`, which it is by default). Sessions are PHP-native;
 rotate the password to invalidate.
 
-With the `admin-totp` plugin enabled, admin access requires
-password + RFC 6238 TOTP (Google Authenticator compatible)
-plus backup recovery codes.
+With the optional `wawoo-plugin-admin-totp` linked and enabled, admin
+access requires password + RFC 6238 TOTP (Google Authenticator
+compatible) plus backup recovery codes.
 
 Actions:
 
@@ -442,14 +446,15 @@ Actions:
 - Delete a post (removes the whole page-bundle folder)
 - View post / category / tag counts
 - Enable / disable plugins and switch themes
-- Moderate comments (approve / reject)
+- Moderate comments when the optional `comments` plugin is installed
+  (approve / reject; see [Optional plugins](#optional-plugins))
 
 Plugins that declare `"settings": true` in `plugin.json` and ship a
 `src/Settings.php` (class with `handle(?string $root): void`) get a
 **Settings** link in the Plugins table; the page is served by the plugin
 itself and typically persists runtime config under
-`cache/settings/<plugin>.json` (e.g. password-gate and maintenance
-store their on/off flag and password there).
+`cache/settings/<plugin>.json` (e.g. an optional `password-gate` stores
+its on/off flag and password there).
 
 ## Docker
 
@@ -477,19 +482,22 @@ extensions enabled. Hardened defaults include `read_only`, `tmpfs`,
 ./vendor/bin/phpunit
 ```
 
-320 PHPUnit tests cover:
+176 PHPUnit tests (438 assertions) cover:
 
-- **Unit:** `Hook`, `Manifest`, `Registry`, `Frontmatter`, `Cache`, `Posts`,
-  `Pages`, `Markdown` (figures), `Theme`, `Autoloader`, `PluginManager`,
-  post status workflow
-- **Plugins:** `password-gate`, `i18n`, `admin-totp`, `comments`,
-  `seo`/`sitemap-html`/`tag-cloud` configs, `pagination`, `contact`, `s3`
-  (incl. SigV4 vectors, SSRF + DNS-rebinding guards)
-- **Integration/Security:** end-to-end HTTP flow (home, posts, pages, RSS,
-  sitemap, search, contact, admin) + admin CSRF/POST enforcement, session
-  rotation, login rate limiting
+- **Unit:** `Hook`, `Manifest`, `Registry`, `Frontmatter`, `Cache`,
+  `Posts`, `Pages`, `Markdown` (figures), `Theme`, `Autoloader`,
+  `PluginManager`, post status workflow
+- **Plugins (core):** `admin`, `rss`, `seo` (`/sitemap.xml`), `menu`,
+  `contact` (CSRF + rate limiting)
+- **Integration/Security:** end-to-end HTTP flow (home, posts, pages,
+  RSS, sitemap, search, contact, admin) + admin CSRF/POST enforcement,
+  session rotation, login rate limiting
 
-All tests must pass before committing. See `tests/` for details.
+Optional-plugin tests run from within a wawoo-cms checkout after
+`plugin:link` has linked the plugin repo, e.g.
+`phpunit tests/Plugin/<Name>*Test.php` (they live here once the plugin's
+`tests/Plugin/` directory is in place). All tests must pass before
+committing. See `tests/` for details.
 
 ## Encoding
 

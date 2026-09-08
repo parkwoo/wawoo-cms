@@ -35,17 +35,11 @@ final class EndToEndTest extends TestCase
         mkdir(self::$docroot . '/posts', 0755, true);
         file_put_contents(self::$docroot . '/posts/welcome.md', "---\ntitle: Welcome E2E\ndate: 2026-09-06\ncategory: Meta\ntags: [test, e2e]\nstatus: published\n---\n\nHello **world** from the E2E suite.\n");
         file_put_contents(self::$docroot . '/posts/draft-post.md', "---\ntitle: Draft Nope\ndate: 2026-01-03\ncategory: Meta\nstatus: draft\n---\n\nSecret draft.\n");
+        file_put_contents(self::$docroot . '/posts/delete-me.md', "---\ntitle: Delete Me E2E\ndate: 2026-09-07\ncategory: Meta\nstatus: published\n---\n\nDisposable post for the delete tests.\n");
         // Page bundle post: md + images in the same folder.
         mkdir(self::$docroot . '/posts/bundled', 0755, true);
         file_put_contents(self::$docroot . '/posts/bundled/index.md', "---\ntitle: Bundled Post\ndate: 2026-09-05\ncategory: Meta\ntags: [test, e2e]\nstatus: published\ncover: hero.svg\ncover_caption: A hero\n---\n\nBundled content ![fig](hero.svg \"Fig\").\n");
         file_put_contents(self::$docroot . '/posts/bundled/hero.svg', '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="50"><rect width="100" height="50" fill="#ccc"/></svg>');
-        // Enough published posts to span multiple pages (POSTS_PER_PAGE=6),
-        // dated before the welcome/bundled posts so those stay on page 1.
-        for ($i = 1; $i <= 6; $i++) {
-            $day = sprintf('%02d', $i);
-            file_put_contents(self::$docroot . "/posts/paging-$i.md",
-                "---\ntitle: Paging Post $i\ndate: 2026-08-$day\ncategory: More\nstatus: published\n---\n\nBody $i\n");
-        }
 
         // Local config: admin/rss/search/seo plugins enabled, no password
         // gate and no admin-totp so the isolated flow stays simple.
@@ -58,7 +52,7 @@ final class EndToEndTest extends TestCase
             . "define('AUTHOR_NAME', 'Tester');\n"
             . "define('BASE_URL', 'http://" . self::$host . ':' . $port . "/');\n"
             . "define('ADMIN_PASSWORD', 'e2e-admin-pass');\n"
-            . "define('ENABLED_PLUGINS', ['admin', 'seo', 'rss', 'search', 'pagination', 'contact', 'mlang']);\n"
+            . "define('ENABLED_PLUGINS', ['admin', 'seo', 'rss', 'search', 'menu', 'contact']);\n"
             . "define('ENABLED_THEMES', ['default']);\n"
         );
 
@@ -90,15 +84,6 @@ final class EndToEndTest extends TestCase
         }
         file_put_contents(self::$docroot . '/plugins/comments/data/x.json',
             '{"author":"Troll","email":"troll@example.com","body":"flame"}');
-
-        // Bilingual content for the mlang plugin: translations share the
-        // bundle folder and are reached through /ja|zh prefixed URLs.
-        file_put_contents(self::$docroot . '/posts/bundled/index.ja.md', "---\ntitle: Bundled Post (ja)\ndate: 2026-09-05\ncategory: Meta\nstatus: published\n---\n\n日本語の記事です。\n");
-        file_put_contents(self::$docroot . '/posts/bundled/index.zh.md', "---\ntitle: Bundled Post (zh)\ndate: 2026-09-05\ncategory: Meta\nstatus: published\n---\n\n中文文章。\n");
-        file_put_contents(self::$docroot . '/pages/about/index.ja.md', "---\ntitle: About (ja)\nexcerpt: ja version\norder: 10\ncover: sample.svg\n---\n\n日本語のAboutページ。\n");
-        // /zh/about must fall back to the default page, so ensure no zh
-        // translation exists for the copied about bundle.
-        @unlink(self::$docroot . '/pages/about/index.zh.md');
 
         self::$proc = proc_open(
             [PHP_BINARY, '-d', 'display_errors=1', '-S', self::$host . ':' . $port, '-t', self::$docroot, self::$docroot . '/router.php'],
@@ -319,15 +304,6 @@ final class EndToEndTest extends TestCase
         $this->assertStringNotContainsString('?post=', $body);
     }
 
-    public function testHomepageShowsNumberedPagination(): void
-    {
-        [$status, $body] = self::request('GET', '/');
-        $this->assertSame(200, $status);
-        $this->assertStringContainsString('class="page-num', $body);
-        $this->assertStringContainsString('pagination-ellipsis', $body);
-        $this->assertStringContainsString('?page=2', $body);
-    }
-
     public function testContactPageRendersAndAcceptsSubmission(): void
     {
         [$status, $body, $headers] = self::request('GET', '/contact');
@@ -361,36 +337,6 @@ final class EndToEndTest extends TestCase
         // Images inside the page bundle are served statically.
         [$imgStatus] = self::request('GET', '/pages/about/sample.svg');
         $this->assertSame(200, $imgStatus);
-    }
-
-    public function testJapanesePostUrlServesTranslation(): void
-    {
-        [$status, $body] = self::request('GET', '/ja/post/bundled');
-        $this->assertSame(200, $status);
-        $this->assertStringContainsString('Bundled Post (ja)', $body);
-        $this->assertStringContainsString('lang="ja"', $body);
-        $this->assertStringContainsString('href="http://' . self::$host . ':' . self::$port . '/zh/post/bundled"', $body);
-        $this->assertStringContainsString('rel="canonical" href="http://' . self::$host . ':' . self::$port . '/ja/post/bundled"', $body);
-    }
-
-    public function testMissingTranslationFallsBackToDefaultContent(): void
-    {
-        // /zh/about has no index.zh.md, so the default-language page is
-        // served at the /zh URL but keeps the default-language canonical.
-        [$status, $body] = self::request('GET', '/zh/about');
-        $this->assertSame(200, $status);
-        $this->assertStringContainsString('About wawoo-cms', $body);
-        $this->assertStringContainsString('rel="canonical" href="http://' . self::$host . ':' . self::$port . '/about"', $body);
-    }
-
-    public function testJapanesePageUrlServesTranslation(): void
-    {
-        [$status, $body] = self::request('GET', '/ja/about');
-        $this->assertSame(200, $status);
-        $this->assertStringContainsString('About (ja)', $body);
-        $this->assertStringContainsString('lang="ja"', $body);
-        $this->assertStringContainsString('class="mlang-links"', $body);
-        $this->assertStringContainsString('rel="canonical" href="http://' . self::$host . ':' . self::$port . '/ja/about"', $body);
     }
 
     public function testAdminLoginFlow(): void
@@ -454,19 +400,19 @@ final class EndToEndTest extends TestCase
         [$cookies] = $this->loginAdmin();
 
         // GET delete must be refused (403) — never state-changing via GET.
-        [$status] = self::request('GET', '/admin/?action=delete&slug=paging-1', $cookies);
+        [$status] = self::request('GET', '/admin/?action=delete&slug=delete-me', $cookies);
         $this->assertSame(403, $status);
 
         // POST delete without csrf → 403.
-        [$status] = self::request('POST', '/admin/?action=delete', $cookies, ['slug' => 'paging-1']);
+        [$status] = self::request('POST', '/admin/?action=delete', $cookies, ['slug' => 'delete-me']);
         $this->assertSame(403, $status);
 
         // POST delete with csrf → 200/302 and the post disappears.
         $csrf = $this->adminCsrf($cookies);
-        [$status, $body, $h] = self::request('POST', '/admin/?action=delete', $cookies, ['slug' => 'paging-1', 'csrf' => $csrf]);
+        [$status, $body, $h] = self::request('POST', '/admin/?action=delete', $cookies, ['slug' => 'delete-me', 'csrf' => $csrf]);
         $this->assertTrue($status === 200 || $status === 302, "delete status was $status body=" . substr($body, 0, 120));
         [$homeStatus, $homeBody] = self::request('GET', '/', $cookies);
-        $this->assertStringNotContainsString('Paging Post 1', $homeBody);
+        $this->assertStringNotContainsString('Delete Me E2E', $homeBody);
     }
 
     public function testPluginSettingsRequireCsrfOnPost(): void

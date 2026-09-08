@@ -46,6 +46,8 @@ function usage(): void
         . "  make:plugin <name>                 scaffold a plugin\n"
         . "  make:theme <name>                  scaffold a theme\n"
         . "  cache:clear                        flush file cache\n"
+        . "  plugin:link <path> [--copy]         link an optional plugin repo into plugins/\n"
+        . "  theme:link <path> [--copy]          link an optional theme repo into themes/\n"
         . "  doctor                             environment self-check\n";
 }
 
@@ -72,6 +74,25 @@ function slug(string $s): string
     $s = preg_replace('/[^a-zA-Z0-9_-]/', '-', trim($s));
     $s = trim((string)$s, '-');
     return strtolower($s);
+}
+
+function copyDirRec(string $src, string $dst): void
+{
+    if (!is_dir($dst)) {
+        mkdir($dst, 0755, true);
+    }
+    foreach (scandir($src) as $e) {
+        if ($e === '.' || $e === '..') {
+            continue;
+        }
+        $s = $src . '/' . $e;
+        $d = $dst . '/' . $e;
+        if (is_dir($s) && !is_link($s)) {
+            copyDirRec($s, $d);
+        } else {
+            copy($s, $d);
+        }
+    }
 }
 
 function writeBundle(string $dir, string $slug, string $frontmatter, string $body): void
@@ -213,6 +234,67 @@ switch ($cmd) {
     case 'cache:clear':
         Cache::flush();
         echo "cache cleared\n";
+        break;
+
+    case 'plugin:link':
+    case 'theme:link':
+        $src = trim((string)($args[1] ?? ''));
+        if ($src === '' || !is_dir($src)) {
+            fwrite(STDERR, "usage: $cmd <repo-path> [--copy]\n");
+            exit(1);
+        }
+        $isPlugin = $cmd === 'plugin:link';
+        $kind     = $isPlugin ? 'plugin' : 'theme';
+        $relDir   = $isPlugin ? 'plugins' : 'themes';
+        // Locate the payload dir: repo root may BE plugins/<name> or contain
+        // plugins/<name> (standalone repo layout) or contain <name>.
+        $candidates = [
+            $src,
+            $src . '/' . $relDir,
+        ];
+        $manifestName = $isPlugin ? 'plugin.json' : 'theme.json';
+        $found = null;
+        foreach ($candidates as $c) {
+            if (!is_dir($c)) {
+                continue;
+            }
+            foreach (glob(rtrim($c, '/') . '/*/' . $manifestName) as $mf) {
+                $dir = dirname($mf);
+                $name = basename($dir);
+                // Skip anything already linked into this repo.
+                if (str_starts_with(realpath($dir), realpath($root . '/' . $relDir))) {
+                    continue;
+                }
+                $found = [$name, $dir];
+                break 2;
+            }
+        }
+        if ($found === null) {
+            fwrite(STDERR, "error: no $kind manifest found under $src\n");
+            exit(1);
+        }
+        [$name, $payloadDir] = $found;
+        $target = $root . '/' . $relDir . '/' . $name;
+        if (file_exists($target)) {
+            fwrite(STDERR, "error: $relDir/$name already exists; remove it first\n");
+            exit(1);
+        }
+        if (flag($args, '--copy')) {
+            if (!is_dir($root . '/' . $relDir)) {
+                mkdir($root . '/' . $relDir, 0755, true);
+            }
+            copyDirRec($payloadDir, $target);
+            echo "copied $payloadDir -> $target\n";
+        } else {
+            if (!is_dir($root . '/' . $relDir)) {
+                mkdir($root . '/' . $relDir, 0755, true);
+            }
+            if (!symlink($payloadDir, $target)) {
+                fwrite(STDERR, "error: could not symlink $payloadDir\n");
+                exit(1);
+            }
+            echo "linked $payloadDir -> $target\n";
+        }
         break;
 
     case 'doctor':

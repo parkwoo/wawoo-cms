@@ -63,7 +63,7 @@ if (!defined('DEBUG'))             define('DEBUG',             false);
 
 // Enabled plugins and themes. Edit in config.local.php to change.
 //
-// CORE plugins — enabled by default; they provide the base CMS experience:
+// CORE plugins ship in this repo and are enabled by default:
 //   admin          – /admin console (post & plugin/theme management)
 //   rss            – /rss feed + nav/head links
 //   search         – /search page
@@ -71,17 +71,15 @@ if (!defined('DEBUG'))             define('DEBUG',             false);
 //   menu           – navigation menu editor (pages/categories/custom links)
 //   contact        – /contact inquiry form (CSRF, rate-limited, inbox + mail)
 //
-// OPTIONAL plugins — disabled by default; enable per site in /admin or here:
-//   pagination     – numbered pagination (1 2 3 …); core list already has
-//                    Prev/Next, so this is an optional enhancement
-//   analytics      – GA snippet (no-op without GA_TRACKING_ID)
-//   password-gate  – site-wide password gate (set a password in its Settings)
-//   maintenance    – maintenance-mode page (503 + Retry-After, password entry)
-//   comments       – comment forms/moderation
-//   tag-cloud      – font-sized tag cloud on the index
-//   sitemap-html   – human-readable /sitemap-page
-//   i18n           – language switcher (en, ja, zh)
-//   admin-totp     – RFC 6238 TOTP second factor for /admin
+// OPTIONAL plugins live in their own repositories. Install one with
+//   php bin/wawoo plugin:link /path/to/wawoo-plugin-<name>
+// then enable it per site in /admin or here. Available repos:
+//   wawoo-plugin-pagination, wawoo-plugin-analytics,
+//   wawoo-plugin-password-gate, wawoo-plugin-maintenance,
+//   wawoo-plugin-comments, wawoo-plugin-tag-cloud,
+//   wawoo-plugin-sitemap-html, wawoo-plugin-i18n,
+//   wawoo-plugin-admin-totp, wawoo-plugin-mlang,
+//   wawoo-plugin-publish, wawoo-plugin-s3
 if (!defined('ENABLED_PLUGINS'))   define('ENABLED_PLUGINS',   ['admin', 'rss', 'search', 'seo', 'menu', 'contact']);
 if (!defined('ENABLED_THEMES'))    define('ENABLED_THEMES',    ['default']);
 

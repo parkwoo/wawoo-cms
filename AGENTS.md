@@ -30,8 +30,32 @@ dispatch.php       plugin-page fallback (fires core.request → 404)
 includes/core/     Bootstrap, Hook, Registry, Manifest, Theme, Autoloader,
                    Frontmatter, Markdown, Posts, Pages, Cache, Url, PluginManager
 includes/Parsedown.php   vendored markdown parser
-posts/  pages/  uploads/  themes/  plugins/  cache/  tests/
+posts/  pages/  uploads/  cache/  tests/
+themes/            only `default/` ships here. Other themes (e.g. `clay` =
+                  `wawoo-theme-clay`) are standalone repos linked via
+                  `bin/wawoo theme:link`
+plugins/           the six core plugins ship here (`admin`, `rss`, `search`,
+                  `seo`, `menu`, `contact`). Optional plugins
+                  (`wawoo-plugin-*`, e.g. `/home/git/wawoo-plugin-comments`)
+                  are standalone repos linked via `bin/wawoo plugin:link`
+                  (`--copy` instead of symlink for Docker image builds)
 ```
+
+## Optional plugins & themes
+
+This repo ships the core only. Optional plugins and the `clay` theme live
+in their own repositories and are linked in before use:
+
+```bash
+cd /path/to/wawoo-cms
+php bin/wawoo plugin:link /home/git/wawoo-plugin-comments   # symlink
+php bin/wawoo plugin:link /home/git/wawoo-plugin-s3 --copy # copy (Docker)
+php bin/wawoo theme:link /home/git/wawoo-theme-clay        # themes too
+```
+
+Once linked they behave exactly like shipped plugins/themes; enable them
+via `ENABLED_PLUGINS` / `ENABLED_THEMES` in `config.local.php` (or
+`/admin → Plugins`).
 
 ## Quick start (as an agent)
 
@@ -99,8 +123,8 @@ Key hooks:
 
 Conventions:
 
-- Filter hooks return a value (e.g. `pagination.render`, `post.html`,
-  `theme.nav.items`); event hooks receive `&$payload`.
+- Filter hooks return a value (e.g. `post.html`, `theme.nav.items`);
+  event hooks receive `&$payload`.
 - A plugin that owns a URL must render + `exit` from its `core.request`
   handler (see `plugins/contact/src/Page.php` for the pattern).
 - Runtime per-site state lives in `cache/settings/<plugin>.json`
@@ -111,20 +135,27 @@ Conventions:
 
 Scaffold: `php bin/wawoo make:plugin name`, `php bin/wawoo make:theme name`.
 
+Optional plugins (the `wawoo-plugin-*` repos) follow this exact contract —
+the same `plugin.json` manifest fields and hooks — but live outside this
+repo until `plugin:link`ed into `plugins/`; after linking they are
+indistinguishable from the shipped core plugins. Their PHPUnit tests live
+under `tests/Plugin/` and run from within this repo's checkout.
+
 ## Theme architecture
 
 `themes/<name>/` with `theme.json` + `templates/`
 (`_header.php`, `_footer.php`, `index.php`, `post.php`, `page.php`,
 `search.php`, `404.php`, `admin/dashboard.php`) + `assets/`. Themes are
-declarative display layers; logic goes in plugins. Both shipped themes
-(`default`, `clay`) use the same hook points.
+declarative display layers; logic goes in plugins. The shipped `default`
+theme and optional themes (e.g. `clay`, linked from `wawoo-theme-clay`
+via `theme:link`) all use the same hook points.
 
 ## Settings plugin contract
 
 A plugin declaring `"settings": true` must ship `src/Settings.php` with
 `public function handle(?string $root): void` that echoes a self-contained
 HTML page and exits. The admin console shows a Settings link automatically
-(see `plugins/password-gate/src/Settings.php`).
+(see `plugins/contact/src/Settings.php`).
 
 ## Testing
 
@@ -132,10 +163,12 @@ HTML page and exits. The admin console shows a Settings link automatically
   real repo filesystem: `tests/bootstrap.php` defines constants pointing at
   `posts/`, `themes/`, `plugins/` plus an isolated `CACHE_DIR`.
 - Handlers that `exit()` must be exercised via subprocess
-  (`PHP_BINARY` + `shell_exec`, see `tests/Plugin/CommentsSecurityTest.php`)
+  (`PHP_BINARY` + `shell_exec`, see `tests/Plugin/AdminPluginTest.php`)
   or by extracting pure static methods and unit-testing those.
-- Run everything: `phpunit` (all 200+ tests), or a file:
-  `phpunit tests/Unit/MarkdownTest.php`. Keep random-order safe: reset
+- Run everything: `phpunit` (all 176 tests, 438 assertions), or a file:
+  `phpunit tests/Unit/MarkdownTest.php`. Optional-plugin tests run the
+  same way from this repo once the plugin is `plugin:link`ed (they land
+  in `tests/Plugin/`). Keep random-order safe: reset
   static caches (Hook/Config/etc.) via reflection and clean temp files.
 
 ## Conventions (hard rules)
