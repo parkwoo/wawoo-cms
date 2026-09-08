@@ -165,11 +165,24 @@ HTML page and exits. The admin console shows a Settings link automatically
 - Handlers that `exit()` must be exercised via subprocess
   (`PHP_BINARY` + `shell_exec`, see `tests/Plugin/AdminPluginTest.php`)
   or by extracting pure static methods and unit-testing those.
-- Run everything: `phpunit` (all 176 tests, 438 assertions), or a file:
+- Run everything: `phpunit` — the 176-test core suite; a few E2E/
+  subprocess tests skip automatically when sockets or curl are
+  unavailable, so assertion totals vary. Or run one file:
   `phpunit tests/Unit/MarkdownTest.php`. Optional-plugin tests run the
   same way from this repo once the plugin is `plugin:link`ed (they land
   in `tests/Plugin/`). Keep random-order safe: reset
   static caches (Hook/Config/etc.) via reflection and clean temp files.
+
+## Docker & ops
+
+README's `## Docker` section is the ops reference: the default
+`docker-compose.yml` is a read-only host-edit/preview mode (admin cannot
+write), `docker-compose.dev.yml` is the writable variant for running the
+admin console, and production needs the `init-volumes` one-shot before
+`docker compose up -d` plus snapshotting the four named volumes together
+for backup/restore. Plugin & theme version pinning and the manual
+update/rollback workflow are documented under "Version pinning & updates"
+in the README's `## Plugins` section.
 
 ## Conventions (hard rules)
 

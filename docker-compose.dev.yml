@@ -1,0 +1,45 @@
+# Writable dev / admin-in-container variant of wawoo-cms.
+#
+# The default docker-compose.yml is read-only host-edit mode: it mounts the
+# content directories with `:ro`, so you edit markdown on the host and
+# preview it in the browser, but the /admin console cannot write (no
+# publish/delete, no settings changes, no comments).
+#
+# This file mounts the same directories WITHOUT `:ro` so the admin console
+# can publish/delete posts, change settings, moderate comments, etc. The
+# cache stays on the wawoo_dev_cache named volume.
+#
+# Never use this in production: it deliberately skips the prod override's
+# read_only / tmpfs / cap_drop hardening.
+services:
+  wawoo-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        BUILDKIT_INLINE_CACHE: 1
+    image: wawoo-cms:dev
+    container_name: wawoo-cms-dev
+    restart: unless-stopped
+    ports:
+      - "8083:80"
+    volumes:
+      - ./posts:/var/www/html/posts
+      - ./pages:/var/www/html/pages
+      - ./themes:/var/www/html/themes
+      - ./plugins:/var/www/html/plugins
+      - ./uploads:/var/www/html/uploads
+      - ./config.local.php:/var/www/html/config.local.php:ro
+      - wawoo_dev_cache:/var/www/html/cache
+    environment:
+      WAWOO_ENV: development
+      TZ: UTC
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost/sitemap.xml"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+
+volumes:
+  wawoo_dev_cache:

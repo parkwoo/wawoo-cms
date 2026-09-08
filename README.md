@@ -55,6 +55,7 @@ wawoo-cms/
 ├── tests/                     PHPUnit suite (176 tests)
 ├── Dockerfile                 PHP 8.3 Apache, opcache tuned
 ├── docker-compose.yml         development compose
+├── docker-compose.dev.yml     writable dev compose (admin-in-container)
 ├── docker-compose.prod.yml    production compose
 ├── .htaccess                  Apache rewrite + security headers
 └── cache/                     generated cache
@@ -373,6 +374,38 @@ theme is installed with
 `php bin/wawoo theme:link /home/git/wawoo-theme-clay` (add `--copy` for
 Docker), then enabled via `ENABLED_THEMES`.
 
+### Version pinning & updates
+
+Each optional plugin repo (`wawoo-plugin-*`) and the `clay` theme repo
+(`wawoo-theme-clay`) is versioned independently (tagged `v1.0.0`), and
+its manifest `requires` states the core version it is built against
+(`core >= 1.0.0`).
+
+To pin a deployment, choose a wawoo-cms tag and a matching tag for each
+optional plugin you use, and record the combination. For the current
+v1.0.0 line the compatible set is simply:
+
+| Repo | Tag |
+|------|-----|
+| wawoo-cms | v1.0.0 |
+| wawoo-plugin-* (each optional plugin) | v1.0.0 |
+| wawoo-theme-clay | v1.0.0 |
+
+When building Docker images, install with `--copy` inside the build so
+the artifact is self-contained — symlinks would dangle once the source
+checkout is gone:
+
+```bash
+php bin/wawoo plugin:link /path/to/wawoo-plugin-<name> --copy
+```
+
+Update & rollback (recommended manual workflow until a lockfile/manager
+exists): before updating a plugin, back up the cache state volume — it
+holds plugin settings, comments/contact inbox and rate-limit state. After
+linking the new tag, run `phpunit tests/Plugin/<Name>*Test.php` from a
+wawoo-cms checkout to verify. To roll back, check out the previous tag,
+re-link it, and restore the cache-volume backup.
+
 ### Available hooks
 
 - `core.boot`           — after plugins/themes are loaded
@@ -431,10 +464,13 @@ define('ENABLED_PLUGINS', ['rss', 'seo', 'hello']);
 
 ## Admin
 
-Admin is a plugin (`admin`). Set `ADMIN_PASSWORD` in `config.local.php`,
+Admin is a plugin (`admin`). Recommended: set
+`$GLOBALS['WAWOO_ADMIN']['password_hash']` to a bcrypt hash in
+`config.local.php` (config.local.example.php shows how to generate one),
 then visit `/admin/` (the `admin` plugin must be enabled in
-`ENABLED_PLUGINS`, which it is by default). Sessions are PHP-native;
-rotate the password to invalidate.
+`ENABLED_PLUGINS`, which it is by default). Plaintext `ADMIN_PASSWORD`
+remains a legacy fallback. Sessions are PHP-native; rotate the password
+to invalidate.
 
 With the optional `wawoo-plugin-admin-totp` linked and enabled, admin
 access requires password + RFC 6238 TOTP (Google Authenticator
@@ -458,31 +494,81 @@ its on/off flag and password there).
 
 ## Docker
 
-### Development
+### Local edit & preview (read-only mounts)
+
+The default `docker compose up -d` serves the blog at
+http://localhost:8082. It mounts `posts/`, `pages/`, `themes/`,
+`plugins/`, `uploads/` and `config.local.php` read-only (`:ro`) from the
+host, keeping only the cache on a named volume — ideal for editing
+markdown on the host and previewing it. The admin console cannot write
+in this mode: the mounts are `:ro`, so publishing/deleting posts,
+changing settings or receiving comments through the container fails.
+
+### Writable dev / admin-in-container
+
+To run the admin console with writable content, use the dev override:
 
 ```bash
-docker compose up -d
-# Blog available at http://localhost:8082
+docker compose -f docker-compose.dev.yml up -d
+# Blog + admin console available at http://localhost:8083
 ```
+
+It builds the same Dockerfile as a `wawoo-dev` service and mounts the
+same directories without the `:ro` flags (cache stays on the
+`wawoo_dev_cache` named volume), so the admin console can publish/delete
+posts, change settings, moderate comments, etc. This mirrors the
+production volume layout but without the read-only hardening — never use
+it in production.
 
 ### Production
 
 ```bash
+# One-shot chown of the named volumes (once per fresh volume set):
+docker compose -f docker-compose.prod.yml run --rm init-volumes
 docker compose -f docker-compose.prod.yml up -d
 # Binds to 127.0.0.1:8080; put a reverse proxy / TLS terminator in front
 ```
 
+The production override is hardened (`read_only`, `tmpfs`, `cap_drop`,
+`no-new-privileges`). The site's mutable state lives in four named
+volumes: `wawoo_posts` (markdown bundles), `wawoo_pages` (fixed pages),
+`wawoo_uploads` (uploaded media) and `wawoo_state` (plugin/theme state,
+contact inbox, comments, caches). The one-shot `init-volumes` service
+chowns those volumes to `www-data` before the main service starts; it
+only needs to run once per fresh volume set — re-running it is harmless.
+
+### Backup & restore
+
+The four volumes above are together the site's source of truth (content
+bundles, uploads, plugin/theme state, comments/contact inbox, caches), so
+snapshot them together. For each volume:
+
+```bash
+docker run --rm -v wawoo_posts:/data -v /path/to/backup:/backup alpine tar czf /backup/wawoo_posts.tgz -C /data .
+docker run --rm -v wawoo_pages:/data -v /path/to/backup:/backup alpine tar czf /backup/wawoo_pages.tgz -C /data .
+docker run --rm -v wawoo_uploads:/data -v /path/to/backup:/backup alpine tar czf /backup/wawoo_uploads.tgz -C /data .
+docker run --rm -v wawoo_state:/data -v /path/to/backup:/backup alpine tar czf /backup/wawoo_state.tgz -C /data .
+```
+
+To restore, extract each archive back into the same volume before
+starting the stack, then run `init-volumes` again.
+
 The Dockerfile uses PHP 8.3 Apache with opcache, intl, zip, and bcmath
-extensions enabled. Hardened defaults include `read_only`, `tmpfs`,
-`cap_drop`, and `no-new-privileges` in the production override.
+extensions enabled.
 
 ## Testing
 
+PHPUnit 9.6 is expected on your `PATH` (this repo has no `vendor/`
+directory, so there is no `./vendor/bin/phpunit`); CI downloads PHPUnit
+9.6 as a phar and runs it the same way. Run the core suite:
+
 ```bash
-./vendor/bin/phpunit
+phpunit
 ```
 
-176 PHPUnit tests (438 assertions) cover:
+The suite is 176 tests. A handful of E2E/subprocess tests skip
+automatically when sockets or curl are unavailable, so the reported
+assertion totals vary between environments. The suite covers:
 
 - **Unit:** `Hook`, `Manifest`, `Registry`, `Frontmatter`, `Cache`,
   `Posts`, `Pages`, `Markdown` (figures), `Theme`, `Autoloader`,
