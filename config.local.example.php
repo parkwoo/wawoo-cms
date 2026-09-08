@@ -24,8 +24,19 @@ define('POSTS_PER_PAGE', 6);
 
 // Plugins & themes to enable. Manifests live under plugins/<name>/plugin.json
 // and themes/<name>/theme.json. Names are matched against manifest "name".
-define('ENABLED_PLUGINS', ['seo', 'analytics']);
+//
+// Core set (enabled by default): admin, rss, search, seo, menu, contact.
+// Optional: pagination, analytics, password-gate, maintenance, comments,
+// tag-cloud, sitemap-html, i18n, admin-totp, mlang, publish, s3.
+define('ENABLED_PLUGINS', ['admin', 'rss', 'search', 'seo', 'menu', 'contact']);
 define('ENABLED_THEMES',  ['default']);
+
+// Admin console credential — RECOMMENDED: a bcrypt hash of the password.
+// Generate with: php -r "echo password_hash('your-password', PASSWORD_BCRYPT), PHP_EOL;"
+// $GLOBALS['WAWOO_ADMIN'] = ['password_hash' => 'Paste-$2y$...-hash-here'];
+
+// Legacy alternative (avoid in production): a plaintext password constant.
+// define('ADMIN_PASSWORD', 'change-me');
 
 // Optional: Google Analytics for the analytics plugin
 define('GA_TRACKING_ID', '');

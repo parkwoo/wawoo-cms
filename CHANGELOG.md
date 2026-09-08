@@ -6,6 +6,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Security
+- **Admin destructive actions now require POST + session CSRF** (delete,
+  publish/unpublish, toggle, schedule, plugin/theme enable/disable). Shared
+  `Wawoo\Plugin\Admin\Csrf` helper; dashboard actions rendered as inline
+  POST forms with a hidden token.
+- **Admin login hardening**: per-IP login rate limiting (5 failures →
+  429 lockout), `session_regenerate_id(true)` on success, `password_verify`
+  against `$GLOBALS['WAWOO_ADMIN']['password_hash']` (plaintext
+  `ADMIN_PASSWORD` kept only as a legacy fallback).
+- **Plugin settings pages** (password-gate, menu, s3, i18n, contact,
+  maintenance) verify a CSRF token on every POST.
+- **S3 SSRF guards**: endpoint must be public HTTPS (optional
+  `allow_http`); loopback / link-local / RFC1918 / ULA / metadata
+  addresses rejected via DNS+literal checks in the SigV4 client and the
+  settings page.
+- **Cookies**: `session.cookie_secure`, `use_strict_mode`,
+  `use_only_cookies` documented; prod compose sets `cookie_secure=1`
+  behind a TLS proxy.
+
 ### Added
 - **Fixed pages**: `pages/<slug>/index.md` served at their own top-level
   URL (`/about`), with `page.php` entry point, `Pages` core class,

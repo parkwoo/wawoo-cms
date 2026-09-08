@@ -23,7 +23,7 @@ What makes it agent-friendly:
   don't need, or read the enabled list in one glance from
   `config.local.php`.
 
-**Version:** 1.0.0 · **Tests:** 256 PHPUnit · **PHP files:** 84+ · **Lines:** ~7,000
+**Version:** 1.0.0 · **Tests:** 276 PHPUnit · **PHP files:** 84+ · **Lines:** ~7,000
 
 ## Layout
 
@@ -65,7 +65,7 @@ wawoo-cms/
 │   ├── publish/               publish workflow + scheduled publishing   [optional]
 │   ├── s3/                    S3-compatible object storage sync         [optional]
 │   └── admin-totp/            TOTP second factor for /admin             [optional]
-├── tests/                     PHPUnit suite (256 tests)
+├── tests/                     PHPUnit suite (276 tests)
 ├── Dockerfile                 PHP 8.3 Apache, opcache tuned
 ├── docker-compose.yml         development compose
 ├── docker-compose.prod.yml    production compose
@@ -457,13 +457,17 @@ extensions enabled. Hardened defaults include `read_only`, `tmpfs`,
 ./vendor/bin/phpunit
 ```
 
-256 PHPUnit tests cover:
+276 PHPUnit tests cover:
 
 - **Unit:** `Hook`, `Manifest`, `Registry`, `Frontmatter`, `Cache`, `Posts`,
-  `Pages`, `Markdown` (figures), `Theme`, `Autoloader`, `PluginManager`
+  `Pages`, `Markdown` (figures), `Theme`, `Autoloader`, `PluginManager`,
+  post status workflow
 - **Plugins:** `password-gate`, `i18n`, `admin-totp`, `comments`,
-  `seo`/`sitemap-html`/`tag-cloud` configs, `pagination`, `contact`
-- **Integration:** end-to-end HTTP flow (home, posts, pages, RSS, sitemap, search, contact, admin)
+  `seo`/`sitemap-html`/`tag-cloud` configs, `pagination`, `contact`, `s3`
+  (incl. SigV4 vectors + SSRF guards)
+- **Integration/Security:** end-to-end HTTP flow (home, posts, pages, RSS,
+  sitemap, search, contact, admin) + admin CSRF/POST enforcement, session
+  rotation, login rate limiting
 
 All tests must pass before committing. See `tests/` for details.
 

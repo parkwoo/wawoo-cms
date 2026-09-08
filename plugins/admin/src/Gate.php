@@ -32,10 +32,12 @@ final class Gate
             return;
         }
         $base = rtrim((string)($root ?? dirname(__DIR__, 3)), '/');
-        if (!defined('ADMIN_PASSWORD') || ADMIN_PASSWORD === '') {
+        $hasCredential = !empty($GLOBALS['WAWOO_ADMIN']['password_hash'])
+            || (defined('ADMIN_PASSWORD') && ADMIN_PASSWORD !== '');
+        if (!$hasCredential) {
             http_response_code(503);
             echo '<h1>' . t('admin.disabled', 'Admin disabled') . '</h1><p>'
-                . t('admin.disabled_hint', 'Set ADMIN_PASSWORD in config.local.php to enable admin.') . '</p>';
+                . t('admin.disabled_hint', 'Set an admin password (ADMIN_PASSWORD or $GLOBALS[WAWOO_ADMIN][password_hash]) in config.local.php to enable admin.') . '</p>';
             exit;
         }
 
@@ -51,7 +53,16 @@ final class Gate
                 $this->renderLogin(t('admin.locked', 'Too many attempts. Try again later.'), 429);
                 exit;
             }
-            if (hash_equals(ADMIN_PASSWORD, (string)$_POST['pw'])) {
+            $passwordOk = false;
+            $hash = (string)($GLOBALS['WAWOO_ADMIN']['password_hash'] ?? '');
+            if ($hash !== '') {
+                $passwordOk = password_verify((string)$_POST['pw'], $hash);
+            } elseif (defined('ADMIN_PASSWORD')) {
+                // Legacy path: plaintext ADMIN_PASSWORD constant. Prefer
+                // password_hash in $GLOBALS['WAWOO_ADMIN'] in production.
+                $passwordOk = hash_equals(ADMIN_PASSWORD, (string)$_POST['pw']);
+            }
+            if ($passwordOk) {
                 self::recordLoginSuccess();
                 session_regenerate_id(true);
                 $_SESSION['wawoo_admin'] = true;
