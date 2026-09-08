@@ -1,63 +1,62 @@
 ---
-title: Welcome to wawoo-cms
-date: 2026-09-07
-category: Meta
+title: "Welcome to wawoo-cms"
+date: 2026-09-08
+category: News
 tags: [intro, wawoo]
 author: wawoo
-excerpt: What wawoo-cms is, what a first-time visitor can expect from it, and how content, themes and plugins fit together.
+excerpt: Welcome to wawoo-cms — a file-based CMS for plain-text lovers. Here is what it is, how it is structured, and where to start.
 status: published
 cover: sample-diagram.svg
 cover_alt: Layers of a wawoo-cms site: markdown posts on top, core kernel in the middle, themes and plugins underneath
 cover_caption: wawoo-cms architecture — posts → core → themes & plugins
 ---
 
-## What this post is for
+Hello and welcome! 👋
 
-If you are evaluating wawoo-cms, this page tells you what it is, what it is
-good at, and how its three layers — content, kernel, and extensions — fit
-together. It assumes no prior knowledge of the project.
+You are looking at a site powered by **wawoo-cms**, a lightweight, file-based
+CMS for people who like to *think in plain text*. No database, no build step,
+no framework — just markdown bundles, PHP 8.3, and a small hook system.
 
-## In short
+## What this is
 
-wawoo-cms is a small, file-based CMS: markdown posts, one active theme,
-and an opt-in plugin API. There is no database, no build step and no
-framework. You drop a markdown bundle into `posts/`, set a few values in
-`config.local.php`, and the site is live.
+wawoo-cms stores content as markdown files on disk. Each post lives in
+`posts/<slug>/index.md`; images can sit next to the markdown in the same
+folder. The core handles routing, frontmatter, markdown rendering and cache.
+Everything else — navigation, RSS, search, contact forms — is an opt-in
+plugin.
 
-![The stack at a glance](sample-diagram.svg "wawoo-cms: posts → core → themes & plugins")
+## What's inside
 
-## What's in the box
+- `includes/core/` — bootstrap, hooks, autoloader, frontmatter, markdown,
+  cache, posts/pages loader
+- `themes/<name>/` — templates, CSS and optional JS
+- `plugins/<name>/` — optional features declared in `plugin.json`
+- `posts/<slug>/index.md` — your content bundles
 
-- `includes/core/` — bootstrap, hooks, manifests, autoloader, frontmatter, markdown, cache
-- `themes/<name>/` — themes ship their own CSS and templates
-- `plugins/<name>/` — plugins declare hooks in `plugin.json`
-- `posts/*.md` — your content
+## Boundaries
 
-## Where the limits are
+- Optimised for text-first blogs and small sites; not a page builder.
+- Requires PHP 8.3+ at runtime; content itself is plain markdown.
+- Large media libraries are better served by object storage (see the `s3`
+  plugin) than by the repo.
 
-- Built for text-first blogs and small sites; not a page builder.
-- PHP is required at runtime (8.3+); content itself is plain markdown.
-- Large media libraries are best moved to an object store (see the `s3`
-  plugin) rather than stored in the repo.
+## Themes & plugins
 
-## Themes and plugins
-
-Themes and plugins are first-class citizens. Each ships a JSON manifest
-with name, version, namespace, entry class, and dependency constraints.
-The core resolves dependencies in order and boots plugins before themes.
+Themes and plugins are first-class citizens. Each ships a JSON manifest with
+name, version, namespace, entry class and dependency constraints. The core
+resolves dependencies in order and boots plugins before themes.
 
 ## Hooks
 
-- `core.boot` — fires after plugins/themes are loaded
+- `core.boot` — fires after plugins and themes are loaded
 - `post.load` — fires when a post is read from disk
-- `post.html` — filter on the rendered HTML of a post
+- `post.html` — filter on rendered post HTML
 - `theme.head` / `theme.head.after` / `theme.footer` — theme-level hooks
 - `index.before_render` / `post.before_render` / `search.before_render`
 
 ## A small diagram
 
-wawoo-cms renders Mermaid diagrams from plain text (the optional
-`mermaid` plugin turns them into SVG):
+Mermaid diagrams render from plain text into SVG. No extra tooling required:
 
 ```mermaid
 flowchart LR
@@ -68,21 +67,23 @@ flowchart LR
     D --> E
 ```
 
-## A code example
+## Code example
 
-Fenced code blocks get a language label and horizontal scrolling:
+Fenced code blocks get syntax highlighting and horizontal scroll automatically:
 
 ```php
 <?php
-// fetch the three most recent posts and print their titles
 foreach (\Wawoo\Core\Posts::all() as $i => $post) {
     if ($i >= 3) { break; }
     echo $post['title'] . "\n";
 }
 ```
 
-## Next steps
+## Getting started
 
-- Run `php bin/wawoo doctor` to check the environment.
-- Add a post: `php bin/wawoo post:new hello-world`.
-- Enable a feature from the optional plugins: `php bin/wawoo plugin:link`.
+1. Run `php bin/wawoo doctor` to check your environment.
+2. Create a post: `php bin/wawoo post:new hello-world --title "Hello, world"`
+3. Open `http://127.0.0.1:8801/post/hello-world` and enjoy. 🎉
+
+Thanks for stopping by — **may your pages load fast and your markdown be
+well-formed.**

@@ -28,7 +28,8 @@ wawoo-cms 是**为 AI agent 设计的文件型 CMS**：纯 PHP 8.3、markdown
 
 ## 联系我们
 
-- 问题 / 源码：本站所基于的仓库
+- 邮箱：`hello@cms.wawoo.jp`
+- 问题 / 源码：https://github.com/parkwoo/wawoo-cms
 - 对某篇文章的反馈：站内联系表单
 
 ## 站点方针

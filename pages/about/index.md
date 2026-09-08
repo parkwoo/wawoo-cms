@@ -29,7 +29,8 @@ substance, not just in title.
 
 ## How to reach us
 
-- Issues / source: the repository this site is built from
+- Email: hello@cms.wawoo.jp
+- Issues / source: https://github.com/parkwoo/wawoo-cms
 - Feedback on an article: use the contact form on the site
 
 ## Site policy
