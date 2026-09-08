@@ -399,6 +399,33 @@ checkout is gone:
 php bin/wawoo plugin:link /path/to/wawoo-plugin-<name> --copy
 ```
 
+#### Complete pinned install example (core + comments + i18n + s3 + clay)
+
+Once the repos are on GitHub, a fully tag-pinned install looks like this.
+Replace the `<…-repo-url>` placeholders with the actual repository URLs:
+
+```bash
+git clone --branch v1.0.0 <core-repo-url>     wawoo-cms
+git clone --branch v1.0.0 <comments-repo-url> wawoo-plugin-comments
+git clone --branch v1.0.0 <i18n-repo-url>     wawoo-plugin-i18n
+git clone --branch v1.0.0 <s3-repo-url>       wawoo-plugin-s3
+git clone --branch v1.0.0 <clay-repo-url>     wawoo-theme-clay
+
+cd wawoo-cms
+php bin/wawoo plugin:link ../wawoo-plugin-comments --copy
+php bin/wawoo plugin:link ../wawoo-plugin-i18n --copy
+php bin/wawoo plugin:link ../wawoo-plugin-s3 --copy
+php bin/wawoo theme:link ../wawoo-theme-clay --copy
+phpunit
+```
+
+Every repo above is cloned on its `v1.0.0` tag, so the combination is
+fully repeatable. `--copy` keeps the core checkout self-contained (also
+what a Docker build should do). `phpunit` runs the core suite plus the
+linked plugin tests (`tests/Plugin/Comments*Test.php`, `I18n*Test.php`,
+`S3*Test.php`). Note `I18n*Test.php` includes a clay-theme rendering case,
+so install `wawoo-theme-clay` too when running the i18n tests.
+
 Update & rollback (recommended manual workflow until a lockfile/manager
 exists): before updating a plugin, back up the cache state volume — it
 holds plugin settings, comments/contact inbox and rate-limit state. After
