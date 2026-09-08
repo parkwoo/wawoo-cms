@@ -4,16 +4,25 @@ date: 2026-09-07
 category: Meta
 tags: [intro, wawoo]
 author: wawoo
-excerpt: A short tour of what wawoo-cms is and how it differs from a static-site generator.
+excerpt: What wawoo-cms is, what a first-time visitor can expect from it, and how content, themes and plugins fit together.
 status: published
 cover: sample-diagram.svg
-cover_caption: Layered architecture of a wawoo-cms installation.
-
-
+cover_alt: Layers of a wawoo-cms site: markdown posts on top, core kernel in the middle, themes and plugins underneath
+cover_caption: wawoo-cms architecture — posts → core → themes & plugins
 ---
-wawoo-cms is a tiny PHP blog kernel: markdown posts, a single theme,
-and a plugin API. Drop a markdown file into `posts/`, edit
-`config.local.php`, and you're done.
+
+## What this post is for
+
+If you are evaluating wawoo-cms, this page tells you what it is, what it is
+good at, and how its three layers — content, kernel, and extensions — fit
+together. It assumes no prior knowledge of the project.
+
+## In short
+
+wawoo-cms is a small, file-based CMS: markdown posts, one active theme,
+and an opt-in plugin API. There is no database, no build step and no
+framework. You drop a markdown bundle into `posts/`, set a few values in
+`config.local.php`, and the site is live.
 
 ![The stack at a glance](sample-diagram.svg "wawoo-cms: posts → core → themes & plugins")
 
@@ -24,12 +33,18 @@ and a plugin API. Drop a markdown file into `posts/`, edit
 - `plugins/<name>/` — plugins declare hooks in `plugin.json`
 - `posts/*.md` — your content
 
+## Where the limits are
+
+- Built for text-first blogs and small sites; not a page builder.
+- PHP is required at runtime (8.3+); content itself is plain markdown.
+- Large media libraries are best moved to an object store (see the `s3`
+  plugin) rather than stored in the repo.
+
 ## Themes and plugins
 
-Themes and plugins are first-class. Each ships a JSON manifest with
-name, version, namespace, entry class, and dependencies. The core
-resolves dependencies in topological order and boots plugins before
-themes.
+Themes and plugins are first-class citizens. Each ships a JSON manifest
+with name, version, namespace, entry class, and dependency constraints.
+The core resolves dependencies in order and boots plugins before themes.
 
 ## Hooks
 
@@ -39,4 +54,8 @@ themes.
 - `theme.head` / `theme.head.after` / `theme.footer` — theme-level hooks
 - `index.before_render` / `post.before_render` / `search.before_render`
 
-Write a plugin, declare it in `ENABLED_PLUGINS`, and you're shipping.
+## Next steps
+
+- Run `php bin/wawoo doctor` to check the environment.
+- Add a post: `php bin/wawoo post:new hello-world`.
+- Enable a feature from the optional plugins: `php bin/wawoo plugin:link`.

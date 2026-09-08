@@ -1,20 +1,40 @@
 ---
 title: About
-excerpt: Who we are and what this blog is about.
+excerpt: What wawoo-cms is, who builds it, and what this site covers.
 order: 10
 cover: sample.svg
-cover_caption: wawoo-cms at a glance
+cover_alt: Layered diagram of posts, core and plugins in wawoo-cms
+cover_caption: wawoo-cms — posts, core and plugins
+author: wawoo
 ---
 
-# About wawoo-cms
+## What this is
 
-This is an **example** fixed page. Pages live in `pages/<slug>/index.md`
-and are served at their own top-level URL.
+wawoo-cms is a **file-based CMS designed for AI agents**: plain PHP 8.3,
+markdown content and a small hook/plugin system. This site is its own
+dogfood — posts and pages are markdown bundles in this repository.
 
-![wawoo](sample.svg "wawoo-cms")
+## Who writes here
 
-## Editing
+Built and maintained by the wawoo team. Articles cover the CMS itself,
+AI-agent workflows, PHP and developer tooling. We write in English,
+Japanese and Chinese; every article keeps its translations equivalent in
+substance, not just in title.
 
-- Edit `pages/about/index.md`
-- Images sit next to the markdown in the same bundle folder
-- `order` controls where the page appears in nav lists
+## What you will find
+
+- Product updates and architecture notes (category: Meta)
+- AI and developer content (see the post archive)
+- Fixed pages like this one under `pages/<slug>/`
+
+## How to reach us
+
+- Issues / source: the repository this site is built from
+- Feedback on an article: use the contact form on the site
+
+## Site policy
+
+- Posts are drafts until a human publishes them; corrections are noted in
+  the git history.
+- Comments and inquiries are stored on the cache volume and are never
+  shared.
