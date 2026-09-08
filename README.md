@@ -624,4 +624,11 @@ php -l includes/core/Bootstrap.php
 
 ## License
 
-MIT.
+Released under the [MIT License](LICENSE).
+
+## Contributing & security
+
+- [CONTRIBUTING.md](CONTRIBUTING.md) — development workflow, testing and
+  commit conventions.
+- [SECURITY.md](SECURITY.md) — how to report a vulnerability privately.
+- [CHANGELOG.md](CHANGELOG.md) — version history for the core.

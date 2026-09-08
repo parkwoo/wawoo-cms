@@ -1,0 +1,41 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    name: Draft GitHub Release
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Extract tag
+        id: tag
+        run: echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+
+      - name: Extract changelog notes
+        id: notes
+        run: |
+          awk -v v="${{ steps.tag.outputs.version }}" '
+            $0 ~ "^## \\[" v "\\]" { on=1; next }
+            on && /^## \[/ { exit }
+            on { print }
+          ' CHANGELOG.md > /tmp/notes.md
+          if [ ! -s /tmp/notes.md ]; then
+            echo "No changelog entry for v${{ steps.tag.outputs.version }}." > /tmp/notes.md
+          fi
+          echo "body_file=/tmp/notes.md" >> "$GITHUB_OUTPUT"
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: wawoo-cms ${{ github.ref_name }}
+          body_path: ${{ steps.notes.outputs.body_file }}
+          draft: true
