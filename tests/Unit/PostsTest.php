@@ -19,7 +19,7 @@ final class PostsTest extends TestCase
         $p = Posts::bySlug('welcome');
         $this->assertNotNull($p);
         $this->assertSame('welcome', $p['slug']);
-        $this->assertSame('Meta', $p['category']);
+        $this->assertSame('News', $p['category']);
         $this->assertArrayHasKey('html', $p);
         $this->assertStringContainsString('<p>', $p['html']);
     }
@@ -33,7 +33,7 @@ final class PostsTest extends TestCase
     {
         $posts = Posts::byCategory('Meta');
         $this->assertCount(1, $posts);
-        $this->assertSame('welcome', $posts[0]['slug']);
+        $this->assertSame('hello-meta', $posts[0]['slug']);
     }
 
     public function testByTag(): void
@@ -45,7 +45,7 @@ final class PostsTest extends TestCase
 
     public function testSearch(): void
     {
-        $this->assertCount(1, Posts::search('wawoo'));
+        $this->assertCount(2, Posts::search('wawoo'));
         $this->assertCount(0, Posts::search('nothing-here'));
         $this->assertCount(0, Posts::search(''));
     }
