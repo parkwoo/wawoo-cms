@@ -36,7 +36,7 @@ themes/            only `default/` ships here. Other themes (e.g. `clay` =
                   `bin/wawoo theme:link`
 plugins/           the six core plugins ship here (`admin`, `rss`, `search`,
                   `seo`, `menu`, `contact`). Optional plugins
-                  (`wawoo-plugin-*`, e.g. `/home/git/wawoo-plugin-comments`)
+                  (`wawoo-plugin-*`, e.g. `/path/to/wawoo-plugin-comments`)
                   are standalone repos linked via `bin/wawoo plugin:link`
                   (`--copy` instead of symlink for Docker image builds)
 ```
@@ -48,9 +48,9 @@ in their own repositories and are linked in before use:
 
 ```bash
 cd /path/to/wawoo-cms
-php bin/wawoo plugin:link /home/git/wawoo-plugin-comments   # symlink
-php bin/wawoo plugin:link /home/git/wawoo-plugin-s3 --copy # copy (Docker)
-php bin/wawoo theme:link /home/git/wawoo-theme-clay        # themes too
+php bin/wawoo plugin:link /path/to/wawoo-plugin-comments   # symlink
+php bin/wawoo plugin:link /path/to/wawoo-plugin-s3 --copy # copy (Docker)
+php bin/wawoo theme:link /path/to/wawoo-theme-clay        # themes too
 ```
 
 Once linked they behave exactly like shipped plugins/themes; enable them

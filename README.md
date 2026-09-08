@@ -299,7 +299,7 @@ Activate a theme by adding its name to `ENABLED_THEMES` in
   repo.
 - **clay** — Claymorphism style ported from hirameki-loto's blog module.
   Lives in its own repository (`wawoo-theme-clay`); install it with
-  `php bin/wawoo theme:link /home/git/wawoo-theme-clay` (add `--copy`
+  `php bin/wawoo theme:link /path/to/wawoo-theme-clay` (add `--copy`
   for Docker builds) before enabling it in `ENABLED_THEMES`.
 
 ### Theme hooks
@@ -367,13 +367,13 @@ at `wawoo-plugin-<name>` and is linked into this repo's `plugins/` with
 
 ```bash
 cd /path/to/wawoo-cms
-php bin/wawoo plugin:link /home/git/wawoo-plugin-comments   # symlink
-php bin/wawoo plugin:link /home/git/wawoo-plugin-s3 --copy # copy (Docker)
+php bin/wawoo plugin:link /path/to/wawoo-plugin-comments   # symlink
+php bin/wawoo plugin:link /path/to/wawoo-plugin-s3 --copy # copy (Docker)
 ```
 
 Themes work the same way: `default` ships in this repo, and the `clay`
 theme is installed with
-`php bin/wawoo theme:link /home/git/wawoo-theme-clay` (add `--copy` for
+`php bin/wawoo theme:link /path/to/wawoo-theme-clay` (add `--copy` for
 Docker), then enabled via `ENABLED_THEMES`.
 
 ### Version pinning & updates
