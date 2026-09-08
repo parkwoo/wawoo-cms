@@ -62,17 +62,48 @@ $canonical      = $meta['canonical'];
     <div class="container">
         <a class="site-brand" href="<?= htmlspecialchars(BASE_URL) ?>"><?= htmlspecialchars(SITE_TITLE) ?></a>
         <nav class="site-nav" role="navigation" aria-label="<?= t('nav.label', 'Primary') ?>">
+            <button type="button" class="nav-toggle" aria-expanded="false" aria-controls="nav-menu" hidden>
+                <span class="nav-toggle-label"><?= t('nav.menu', 'Menu') ?></span>
+            </button>
             <?php $__menu = \Wawoo\Core\Hook::filter('theme.nav.items', null, $vars); ?>
             <?php if (is_string($__menu) && $__menu !== ''): ?>
-                <?= $__menu ?>
+                <div id="nav-menu" class="nav-menu"><?= $__menu ?></div>
             <?php else: ?>
-                <a href="<?= htmlspecialchars(BASE_URL) ?>"><?= t('nav.home', 'Home') ?></a>
-                <?php foreach (\Wawoo\Core\Pages::all() as $pg): ?>
-                    <a href="<?= htmlspecialchars(BASE_URL) ?><?= htmlspecialchars($pg['slug']) ?>"><?= htmlspecialchars($pg['title']) ?></a>
-                <?php endforeach; ?>
-                <?php foreach ($stats['categories'] as $cat): ?>
-                    <a href="<?= htmlspecialchars(BASE_URL) ?>?cat=<?= urlencode(strtolower($cat)) ?>"><?= htmlspecialchars($cat) ?></a>
-                <?php endforeach; ?>
+                <?php
+                    $__pagesAll = \Wawoo\Core\Pages::all();
+                    $__catsAll  = $stats['categories'] ?? [];
+                    $__pagesInline = array_slice($__pagesAll, 0, 4);
+                    $__catsInline  = array_slice($__catsAll, 0, 3);
+                    $__overflow    = array_slice($__pagesAll, 4);
+                    $__overflowCats = array_slice($__catsAll, 3);
+                ?>
+                <div id="nav-menu" class="nav-menu">
+                    <a href="<?= htmlspecialchars(BASE_URL) ?>"><?= t('nav.home', 'Home') ?></a>
+                    <?php foreach ($__pagesInline as $pg): ?>
+                        <a href="<?= htmlspecialchars(BASE_URL) ?><?= htmlspecialchars($pg['slug']) ?>"><?= htmlspecialchars($pg['title']) ?></a>
+                    <?php endforeach; ?>
+                    <?php foreach ($__catsInline as $cat): ?>
+                        <a href="<?= htmlspecialchars(BASE_URL) ?>?cat=<?= urlencode(strtolower($cat)) ?>"><?= htmlspecialchars($cat) ?></a>
+                    <?php endforeach; ?>
+                    <?php if ($__overflow !== [] || $__overflowCats !== []): ?>
+                        <div class="nav-more">
+                            <button type="button" class="nav-more-toggle" aria-expanded="false" aria-haspopup="true">
+                                <?= t('nav.topics', 'Topics') ?>
+                            </button>
+                            <div class="nav-more-menu" hidden>
+                                <?php foreach ($__overflow as $pg): ?>
+                                    <a href="<?= htmlspecialchars(BASE_URL) ?><?= htmlspecialchars($pg['slug']) ?>"><?= htmlspecialchars($pg['title']) ?></a>
+                                <?php endforeach; ?>
+                                <?php if ($__overflow !== [] && $__overflowCats !== []): ?>
+                                    <span class="nav-more-sep" role="separator"></span>
+                                <?php endif; ?>
+                                <?php foreach ($__overflowCats as $cat): ?>
+                                    <a href="<?= htmlspecialchars(BASE_URL) ?>?cat=<?= urlencode(strtolower($cat)) ?>"><?= htmlspecialchars($cat) ?></a>
+                                <?php endforeach; ?>
+                            </div>
+                        </div>
+                    <?php endif; ?>
+                </div>
             <?php endif; ?>
             <?php Hook::fire('theme.nav', $vars); ?>
         </nav>

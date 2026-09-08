@@ -4,6 +4,7 @@
         <div>&copy; <?= date('Y') ?> <?= htmlspecialchars(SITE_TITLE) ?>. Powered by <a href="https://github.com/">wawoo-cms</a>.</div>
     </div>
 </footer>
+<script src="<?= \Wawoo\Core\Theme::asset('js/nav.js') ?>" defer></script>
 <script src="<?= \Wawoo\Core\Theme::asset('js/post-images.js') ?>" defer></script>
 <script>
 document.querySelectorAll('pre > code[class*="language-"]').forEach(function (code) {
