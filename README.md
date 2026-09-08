@@ -23,7 +23,7 @@ What makes it agent-friendly:
   don't need, or read the enabled list in one glance from
   `config.local.php`.
 
-**Version:** 1.0.0 · **Tests:** 308 PHPUnit · **PHP files:** 84+ · **Lines:** ~7,000
+**Version:** 1.0.0 · **Tests:** 316 PHPUnit · **PHP files:** 84+ · **Lines:** ~7,000
 
 ## Layout
 
@@ -65,7 +65,7 @@ wawoo-cms/
 │   ├── publish/               publish workflow + scheduled publishing   [optional]
 │   ├── s3/                    S3-compatible object storage sync         [optional]
 │   └── admin-totp/            TOTP second factor for /admin             [optional]
-├── tests/                     PHPUnit suite (308 tests)
+├── tests/                     PHPUnit suite (316 tests)
 ├── Dockerfile                 PHP 8.3 Apache, opcache tuned
 ├── docker-compose.yml         development compose
 ├── docker-compose.prod.yml    production compose
@@ -186,7 +186,11 @@ php bin/wawoo publish:due                          # promote due posts now
 The `s3` plugin (optional) moves post/page media to an S3-compatible
 bucket and serves it from there. It works with AWS S3, Cloudflare R2,
 MinIO and any S3 API implementation — the SigV4 client is pure PHP
-(stream contexts), so no SDK, composer or curl extension is needed.
+(stream sockets), so no SDK, composer or curl extension is needed.
+Requests are signed with your Access Key / Secret Key and connect to the
+**verified public IP** with TLS certificate/SNI verification against the
+configured hostname, so DNS rebinding cannot redirect traffic to an
+internal address.
 
 Setup in `/admin → Plugins → s3 → Settings`:
 
@@ -473,14 +477,14 @@ extensions enabled. Hardened defaults include `read_only`, `tmpfs`,
 ./vendor/bin/phpunit
 ```
 
-308 PHPUnit tests cover:
+316 PHPUnit tests cover:
 
 - **Unit:** `Hook`, `Manifest`, `Registry`, `Frontmatter`, `Cache`, `Posts`,
   `Pages`, `Markdown` (figures), `Theme`, `Autoloader`, `PluginManager`,
   post status workflow
 - **Plugins:** `password-gate`, `i18n`, `admin-totp`, `comments`,
   `seo`/`sitemap-html`/`tag-cloud` configs, `pagination`, `contact`, `s3`
-  (incl. SigV4 vectors + SSRF guards)
+  (incl. SigV4 vectors, SSRF + DNS-rebinding guards)
 - **Integration/Security:** end-to-end HTTP flow (home, posts, pages, RSS,
   sitemap, search, contact, admin) + admin CSRF/POST enforcement, session
   rotation, login rate limiting

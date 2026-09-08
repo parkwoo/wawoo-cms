@@ -17,10 +17,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `ADMIN_PASSWORD` kept only as a legacy fallback).
 - **Plugin settings pages** (password-gate, menu, s3, i18n, contact,
   maintenance) verify a CSRF token on every POST.
-- **S3 SSRF guards**: endpoint must be public HTTPS (optional
-  `allow_http`); loopback / link-local / RFC1918 / ULA / metadata
-  addresses rejected via DNS+literal checks in the SigV4 client and the
-  settings page.
+- **S3 SSRF + DNS-rebinding guards**: endpoint must be public HTTPS
+  (optional `allow_http`); loopback / link-local / RFC1918 / ULA /
+  metadata addresses rejected via DNS+literal checks in the SigV4 client
+  and the settings page. Connections are pinned to the verified public IP
+  (no second DNS lookup at request time) with TLS certificate/SNI
+  verification against the configured hostname.
 - **Cookies**: `session.cookie_secure`, `use_strict_mode`,
   `use_only_cookies` documented; prod compose sets `cookie_secure=1`
   behind a TLS proxy.

@@ -4,27 +4,62 @@ namespace Wawoo\Plugin\S3;
 /**
  * Minimal AWS Signature Version 4 client for S3-compatible object storage.
  *
- * Talks to the configured endpoint verbatim using PHP stream contexts only
- * (no curl, no third-party SDKs). Requests are signed for path-style access
- * (endpoint/bucket/key), which AWS S3, Cloudflare R2 and MinIO all accept.
+ * Talks to the configured endpoint using a manual pinned-IP socket (no curl,
+ * no third-party SDKs, no http stream wrapper). The endpoint host is validated
+ * once in the constructor and the verified public addresses are pinned; every
+ * request connects straight to a pinned IP so DNS is never re-consulted at
+ * connect time (DNS-rebinding resistant). TLS certificate and SNI verification
+ * still run against the original hostname via peer_name. Requests are signed
+ * for path-style access (endpoint/bucket/key), which AWS S3, Cloudflare R2
+ * and MinIO all accept.
  */
 final class Client
 {
     private array $cfg;
+    private ?string $scheme = null;
+    private ?string $pinnedHost = null;
+    private ?array $pinnedIps = null;
+    private ?int $port = null;
 
     public function __construct(array $cfg = [])
     {
         $this->cfg = $cfg;
+        $endpoint = trim((string)($cfg['endpoint'] ?? ''));
+        $clean = $endpoint !== '' ? self::validateEndpoint($endpoint, $cfg) : null;
+        if ($clean === null) {
+            return;
+        }
+        $split = self::splitEndpoint($clean);
+        if ($split === null) {
+            return;
+        }
+        [$scheme, $host, $port] = $split;
+        $bare = trim($host, '[]');
+        $this->scheme = $scheme;
+        $this->port = $port ?? ($scheme === 'http' ? 80 : 443);
+        $this->pinnedHost = $bare;
+        $this->pinnedIps = filter_var($bare, FILTER_VALIDATE_IP) !== false
+            ? [$bare]
+            : self::resolvePinnedAddresses($bare);
+    }
+
+    /** First verified public address requests connect to, or null. */
+    public function pinnedIp(): ?string
+    {
+        return $this->pinnedIps[0] ?? null;
+    }
+
+    /** Hostname (or literal IP) TLS verification and Host headers use. */
+    public function pinnedHost(): ?string
+    {
+        return $this->pinnedHost;
     }
 
     /**
-     * Normalize and SSRF-validate an S3 endpoint. Returns the cleaned
-     * scheme://host[:port] string when the host only resolves to public
-     * addresses, or null when the endpoint is unusable (http without
-     * allow_http, embedded path/userinfo, blocked port, or any resolved
-     * loopback/private/link-local/unspecified address).
+     * Structurally split an endpoint URL into [scheme, host, port] where port
+     * is null when absent. No DNS or SSRF checks happen here.
      */
-    public static function validateEndpoint(string $endpoint, array $cfg = []): ?string
+    public static function splitEndpoint(string $endpoint): ?array
     {
         $endpoint = trim($endpoint);
         if ($endpoint === '' || !preg_match('#^https?://#i', $endpoint)) {
@@ -35,11 +70,7 @@ final class Client
             return null;
         }
         $scheme = strtolower((string)$parts['scheme']);
-        $allowHttp = !empty($cfg['allow_http']);
         if ($scheme !== 'https' && $scheme !== 'http') {
-            return null;
-        }
-        if ($scheme === 'http' && !$allowHttp) {
             return null;
         }
         $host = (string)$parts['host'];
@@ -51,6 +82,30 @@ final class Client
             return null;
         }
         $port = isset($parts['port']) ? (int)$parts['port'] : null;
+        if ($port !== null && ($port < 1 || $port > 65535)) {
+            return null;
+        }
+        return [$scheme, $host, $port];
+    }
+
+    /**
+     * Normalize and SSRF-validate an S3 endpoint. Returns the cleaned
+     * scheme://host[:port] string when the host only resolves to public
+     * addresses, or null when the endpoint is unusable (http without
+     * allow_http, embedded path/userinfo, blocked port, or any resolved
+     * loopback/private/link-local/unspecified address).
+     */
+    public static function validateEndpoint(string $endpoint, array $cfg = []): ?string
+    {
+        $split = self::splitEndpoint($endpoint);
+        if ($split === null) {
+            return null;
+        }
+        [$scheme, $host, $port] = $split;
+        $allowHttp = !empty($cfg['allow_http']);
+        if ($scheme === 'http' && !$allowHttp) {
+            return null;
+        }
         if ($port !== null && !self::portAllowed($scheme, $port, $allowHttp)) {
             return null;
         }
@@ -60,6 +115,23 @@ final class Client
             }
         }
         return self::buildEndpoint($scheme, $host, $port);
+    }
+
+    /**
+     * Resolve a hostname to the verified public addresses requests may pin.
+     * Returns a non-empty list of public IP strings, or null when the host is
+     * a blocked literal, resolves to no public address, or cannot be resolved.
+     */
+    public static function resolvePinnedAddresses(string $host): ?array
+    {
+        $pinned = [];
+        foreach (self::hostAddresses($host) as $address) {
+            if (!self::isBlockedAddress($address)) {
+                $pinned[] = $address;
+            }
+        }
+        $pinned = array_values(array_unique($pinned));
+        return $pinned !== [] ? $pinned : null;
     }
 
     private static function portAllowed(string $scheme, int $port, bool $allowHttp): bool
@@ -272,32 +344,31 @@ final class Client
     }
 
     /**
-     * Perform one signed request against the endpoint and return
-     * [httpStatus, responseBody]. Non-2xx responses are still read back
-     * (ignore_errors) so the caller can decide.
+     * Perform one signed request against the pinned endpoint and return
+     * [httpStatus, responseBody]. The connection goes to the address pinned in
+     * the constructor (never a fresh DNS lookup) and TLS verifies against the
+     * original hostname. Non-2xx responses are still read back so the caller
+     * can decide.
      */
     private function request(string $method, string $key, string $body = '', ?string $contentType = null): array
     {
+        if ($this->pinnedHost === null || $this->pinnedIps === null || $this->pinnedIps === []) {
+            return [0, ''];
+        }
         $bucket = trim((string)($this->cfg['bucket'] ?? ''));
         $access = (string)($this->cfg['access_key'] ?? '');
         $secret = (string)($this->cfg['secret_key'] ?? '');
         if ($bucket === '' || $access === '' || $secret === '') {
             return [0, ''];
         }
-        $endpoint = self::validateEndpoint((string)($this->cfg['endpoint'] ?? ''), $this->cfg);
-        if ($endpoint === null) {
-            return [0, ''];
-        }
 
         $region = self::region($this->cfg);
-        $keyPath = self::encodePath($key);
-        $uri = '/' . self::encodePath($bucket) . '/' . $keyPath;
-        $url = $endpoint . $uri;
-        $host = (string)parse_url($url, PHP_URL_HOST);
+        $uri = '/' . self::encodePath($bucket) . '/' . self::encodePath($key);
         $amzDate = gmdate('Ymd\THis\Z');
         $dateStamp = gmdate('Ymd');
         $payloadHash = hash('sha256', $body);
 
+        $host = $this->hostHeader();
         $headers = [
             'host'                 => $host,
             'x-amz-content-sha256' => $payloadHash,
@@ -319,32 +390,172 @@ final class Client
             . ', SignedHeaders=' . $signedHeaders
             . ', Signature=' . $signature;
 
-        $headerLines = [
-            'Host: ' . $host,
-            'x-amz-date: ' . $amzDate,
-            'x-amz-content-sha256: ' . $payloadHash,
-            'Authorization: ' . $authorization,
-        ];
+        $raw = $method . ' ' . $uri . " HTTP/1.1\r\n"
+            . 'Host: ' . $host . "\r\n"
+            . 'x-amz-date: ' . $amzDate . "\r\n"
+            . 'x-amz-content-sha256: ' . $payloadHash . "\r\n"
+            . 'Authorization: ' . $authorization . "\r\n";
         if (isset($headers['content-type'])) {
-            $headerLines[] = 'Content-Type: ' . $headers['content-type'];
+            $raw .= 'Content-Type: ' . $headers['content-type'] . "\r\n";
         }
+        $raw .= 'Content-Length: ' . strlen($body) . "\r\n"
+            . "Connection: close\r\n\r\n"
+            . $body;
 
-        $ctx = stream_context_create(['http' => [
-            'method'          => $method,
-            'header'          => implode("\r\n", $headerLines),
-            'content'         => $body,
-            'ignore_errors'   => true,
-            'timeout'         => 30,
-            'protocol_version'=> 1.1,
-            'follow_location' => 0,
+        return $this->transact($raw);
+    }
+
+    /**
+     * Open a raw TCP socket to a pinned IP, enable TLS against the original
+     * hostname when https, write the request and read the response to EOF.
+     */
+    private function transact(string $request): array
+    {
+        $ip = $this->pinnedIps[0];
+        $target = str_contains($ip, ':') ? '[' . $ip . ']' : $ip;
+        $ctx = stream_context_create(['ssl' => [
+            'peer_name'        => (string)$this->pinnedHost,
+            'SNI_enabled'      => true,
+            'verify_peer'      => true,
+            'verify_peer_name' => true,
         ]]);
-        $resp = @file_get_contents($url, false, $ctx);
+        $sock = @stream_socket_client(
+            'tcp://' . $target . ':' . $this->port,
+            $errno,
+            $errstr,
+            30,
+            STREAM_CLIENT_CONNECT,
+            $ctx
+        );
+        if ($sock === false) {
+            return [0, ''];
+        }
+        if ($this->scheme === 'https') {
+            $tls = @stream_socket_enable_crypto(
+                $sock,
+                true,
+                STREAM_CRYPTO_METHOD_TLSv1_2_CLIENT | STREAM_CRYPTO_METHOD_TLSv1_3_CLIENT
+            );
+            if ($tls !== true) {
+                fclose($sock);
+                return [0, ''];
+            }
+        }
+        stream_set_timeout($sock, 30);
+        self::writeAll($sock, $request);
+        $data = self::readAll($sock);
+        fclose($sock);
+        return self::parseResponse($data);
+    }
 
+    private function hostHeader(): string
+    {
+        $host = (string)$this->pinnedHost;
+        if (filter_var($host, FILTER_VALIDATE_IP) !== false && str_contains($host, ':')) {
+            $host = '[' . $host . ']';
+        }
+        $default = $this->scheme === 'http' ? 80 : 443;
+        if ($this->port !== null && $this->port !== $default) {
+            $host .= ':' . $this->port;
+        }
+        return $host;
+    }
+
+    private static function writeAll($sock, string $data): void
+    {
+        $total = strlen($data);
+        $offset = 0;
+        while ($offset < $total) {
+            $written = @fwrite($sock, $offset === 0 ? $data : substr($data, $offset));
+            if ($written === false || $written === 0) {
+                return;
+            }
+            $offset += $written;
+        }
+    }
+
+    private static function readAll($sock): string
+    {
+        $data = '';
+        while (!feof($sock)) {
+            $chunk = @fread($sock, 16384);
+            if ($chunk === false) {
+                break;
+            }
+            if ($chunk === '') {
+                if (!empty(stream_get_meta_data($sock)['timed_out'])) {
+                    break;
+                }
+                continue;
+            }
+            $data .= $chunk;
+        }
+        return $data;
+    }
+
+    /** Split head/body, extract the status code and de-chunk when needed. */
+    private static function parseResponse(string $data): array
+    {
+        $head = $data;
+        $body = '';
+        $sep = strpos($data, "\r\n\r\n");
+        if ($sep !== false) {
+            $head = substr($data, 0, $sep);
+            $body = substr($data, $sep + 4);
+        } else {
+            $sep = strpos($data, "\n\n");
+            if ($sep !== false) {
+                $head = substr($data, 0, $sep);
+                $body = substr($data, $sep + 2);
+            }
+        }
+        $lines = preg_split("/\r\n|\r|\n/", $head) ?: [];
         $status = 0;
-        if (isset($http_response_header[0]) && preg_match('#\s(\d{3})\s#', $http_response_header[0], $m)) {
+        if (isset($lines[0]) && preg_match('#^HTTP/\S+\s+(\d{3})#', $lines[0], $m)) {
             $status = (int)$m[1];
         }
-        return [$status, $resp === false ? '' : (string)$resp];
+        $chunked = false;
+        foreach (array_slice($lines, 1) as $line) {
+            $colon = strpos($line, ':');
+            if ($colon === false) {
+                continue;
+            }
+            $name = strtolower(trim(substr($line, 0, $colon)));
+            if ($name === 'transfer-encoding' && stripos(trim(substr($line, $colon + 1)), 'chunked') !== false) {
+                $chunked = true;
+            }
+        }
+        if ($chunked) {
+            $body = self::dechunk($body);
+        }
+        return [$status, $body];
+    }
+
+    private static function dechunk(string $body): string
+    {
+        $out = '';
+        $offset = 0;
+        $length = strlen($body);
+        while ($offset < $length) {
+            $eol = strpos($body, "\r\n", $offset);
+            if ($eol === false) {
+                break;
+            }
+            $sizeHex = trim(substr($body, $offset, $eol - $offset));
+            if ($sizeHex === '' || !ctype_xdigit($sizeHex)) {
+                break;
+            }
+            $size = (int)hexdec($sizeHex);
+            if ($size === 0 || $eol + 2 + $size > $length) {
+                break;
+            }
+            $out .= substr($body, $eol + 2, $size);
+            $offset = $eol + 2 + $size;
+            if (substr($body, $offset, 2) === "\r\n") {
+                $offset += 2;
+            }
+        }
+        return $out;
     }
 
     private static function signedHeaderNames(array $headers): string
