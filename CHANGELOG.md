@@ -24,6 +24,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   checkout.
 - `config.example.php` default `ENABLED_PLUGINS` = core set; optional
   plugins are enabled per site after `plugin:link`.
+- GitHub Actions CI (`.github/workflows/ci.yml`): PHP 8.2 & 8.3, php -l,
+  full core PHPUnit 9.6 suite (176 tests) via phar (no composer).
 
 ### Security
 - **Comments & admin-TOTP runtime data moved into `cache/`** (comments →
