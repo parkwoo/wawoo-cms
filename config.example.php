@@ -79,7 +79,8 @@ if (!defined('DEBUG'))             define('DEBUG',             false);
 //   wawoo-plugin-comments, wawoo-plugin-tag-cloud,
 //   wawoo-plugin-sitemap-html, wawoo-plugin-i18n,
 //   wawoo-plugin-admin-totp, wawoo-plugin-mlang,
-//   wawoo-plugin-publish, wawoo-plugin-s3
+//   wawoo-plugin-publish, wawoo-plugin-s3,
+//   wawoo-plugin-mermaid
 if (!defined('ENABLED_PLUGINS'))   define('ENABLED_PLUGINS',   ['admin', 'rss', 'search', 'seo', 'menu', 'contact']);
 if (!defined('ENABLED_THEMES'))    define('ENABLED_THEMES',    ['default']);
 

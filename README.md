@@ -360,8 +360,10 @@ at `wawoo-plugin-<name>` and is linked into this repo's `plugins/` with
 - `wawoo-plugin-i18n` — UI translation (en/ja/zh) via a `t()` template helper
 - `wawoo-plugin-mlang` — multi-language content (`/ja/post/<slug>`, …)
 - `wawoo-plugin-admin-totp` — TOTP second factor for `/admin`
-- `wawoo-plugin-publish` — publish workflow + scheduled publishing
-- `wawoo-plugin-s3` — S3-compatible object storage sync
+ - `wawoo-plugin-publish` — publish workflow + scheduled publishing
+ - `wawoo-plugin-s3` — S3-compatible object storage sync
+ - `wawoo-plugin-mermaid` — renders ```mermaid fenced diagrams to SVG
+
 
 ```bash
 cd /path/to/wawoo-cms
