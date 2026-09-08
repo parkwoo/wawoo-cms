@@ -46,6 +46,7 @@ final class Bootstrap
         require_once __DIR__ . '/Posts.php';
         require_once __DIR__ . '/Pages.php';
         require_once __DIR__ . '/Cache.php';
+        require_once __DIR__ . '/RateLimit.php';
         require_once __DIR__ . '/Url.php';
         require_once __DIR__ . '/Autoloader.php';
         require_once __DIR__ . '/PluginManager.php';

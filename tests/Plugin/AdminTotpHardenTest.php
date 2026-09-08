@@ -136,7 +136,7 @@ final class AdminTotpHardenTest extends TestCase
         $this->assertSame(5, $all['max_attempts']);
         $this->assertSame(300, $all['lockout_seconds']);
         $this->assertSame('admin.json', $all['data_file']);
-        $this->assertStringEndsWith('plugins/admin-totp/data/admin.json', Config::dataPath());
+        $this->assertStringEndsWith('cache/admin-totp/admin.json', Config::dataPath());
     }
 
     public function testGlobalsOverridePluginJsonDefaults(): void

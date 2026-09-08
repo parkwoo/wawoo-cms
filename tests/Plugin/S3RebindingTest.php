@@ -19,6 +19,19 @@ final class S3RebindingTest extends TestCase
         $_POST = [];
         $_SERVER['REQUEST_METHOD'] = 'GET';
         unset($GLOBALS['WAWOO_S3']);
+        // Deterministic, network-independent DNS: public host resolves to a
+        // public IP; unresolvable names return nothing. Never touch real DNS.
+        Client::$resolver = function (string $host): array {
+            switch ($host) {
+                case 's3.amazonaws.com':
+                case 'cdn.example.com':
+                    return ['8.8.8.8'];
+                case 'example.com':
+                    return ['1.1.1.1'];
+                default:
+                    return [];
+            }
+        };
         $this->resetConfigCache();
         $this->cleanupFiles();
     }
@@ -28,6 +41,7 @@ final class S3RebindingTest extends TestCase
         $_POST = [];
         $_SERVER['REQUEST_METHOD'] = 'GET';
         unset($GLOBALS['WAWOO_S3']);
+        Client::$resolver = null;
         $this->resetConfigCache();
         $this->cleanupFiles();
     }

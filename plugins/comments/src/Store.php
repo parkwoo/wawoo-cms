@@ -27,7 +27,10 @@ final class Store
 {
     public static function dataDir(): string
     {
-        return dirname(__DIR__) . '/data';
+        // Runtime comments live under the writable, web-denied cache volume
+        // (plugins/comments/data is not writable under a read-only prod
+        // root filesystem).
+        return rtrim(\CACHE_DIR, '/\\') . '/comments';
     }
 
     public static function file(string $slug): string

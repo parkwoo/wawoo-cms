@@ -109,7 +109,11 @@ final class Client
         if ($port !== null && !self::portAllowed($scheme, $port, $allowHttp)) {
             return null;
         }
-        foreach (self::hostAddresses($host) as $address) {
+        $addresses = self::hostAddresses($host);
+        if ($addresses === [] && filter_var($host, FILTER_VALIDATE_IP) === false) {
+            return null; // unresolvable host — fail closed (also network-free)
+        }
+        foreach ($addresses as $address) {
             if (self::isBlockedAddress($address)) {
                 return null;
             }
@@ -142,11 +146,22 @@ final class Client
         return $scheme === 'https' && ($port === 443 || $port === 8443);
     }
 
+    /**
+     * Optional DNS resolver override for tests: fn(string $host): array of
+     * address strings. Null (default) uses the system resolver.
+     * @var (callable(string):array)|null
+     */
+    public static $resolver = null;
+
     private static function hostAddresses(string $host): array
     {
         $host = trim($host, '[]');
         if (filter_var($host, FILTER_VALIDATE_IP) !== false) {
             return [$host];
+        }
+        if (self::$resolver !== null) {
+            $out = (self::$resolver)($host);
+            return is_array($out) ? array_values(array_filter($out, 'is_string')) : [];
         }
         $addresses = [];
         $ipv4 = gethostbynamel($host);
@@ -360,6 +375,12 @@ final class Client
         $secret = (string)($this->cfg['secret_key'] ?? '');
         if ($bucket === '' || $access === '' || $secret === '') {
             return [0, ''];
+        }
+
+        // Shared global outbound API rate cap (default 3 req/s, configurable).
+        $rate = isset($this->cfg['rate_per_second']) ? (int)$this->cfg['rate_per_second'] : 3;
+        if (!\Wawoo\Core\RateLimit::allow('outbound', $rate)) {
+            return [429, ''];
         }
 
         $region = self::region($this->cfg);

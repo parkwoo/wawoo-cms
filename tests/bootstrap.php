@@ -70,6 +70,7 @@ require $root . '/includes/core/Markdown.php';
 require $root . '/includes/core/Posts.php';
 require $root . '/includes/core/Pages.php';
 require $root . '/includes/core/Cache.php';
+require $root . '/includes/core/RateLimit.php';
 require $root . '/includes/core/Url.php';
 require $root . '/includes/core/PluginManager.php';
 require $root . '/includes/core/Bootstrap.php';

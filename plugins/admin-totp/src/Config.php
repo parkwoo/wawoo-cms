@@ -35,10 +35,13 @@ final class Config
     public static function dataPath(): string
     {
         $file = (string)self::all()['data_file'];
-        // Absolute overrides (used by the test-suite) bypass the fixed data dir.
+        // Absolute overrides (used by the test-suite) bypass the state dir.
         if ($file !== '' && $file[0] === '/') {
             return $file;
         }
-        return dirname(__DIR__) . '/data/' . $file;
+        // Runtime state lives under the writable, web-denied cache volume
+        // (plugins/admin-totp/data is not writable under a read-only prod
+        // root filesystem).
+        return rtrim(\CACHE_DIR, '/\\') . '/admin-totp/' . $file;
     }
 }

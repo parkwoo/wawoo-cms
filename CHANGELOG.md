@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Security
+- **Comments & admin-TOTP runtime data moved into `cache/`** (comments →
+  `cache/comments/`, TOTP/rate state → `cache/admin-totp/`), which is the
+  writable, web-denied, persistent volume — they now work under a
+  read-only prod root filesystem.
+- **Shared outbound API rate limiter** (`Wawoo\Core\RateLimit`): a global
+  one-per-second cap across plugins/workers via the cache volume + flock;
+  the S3 client honours it (default 3 req/s, `rate_per_second`
+  configurable) so the aggregate external-API rate is bounded.
+- **S3 tests are network-independent**: `Client::$resolver` injects a DNS
+  resolver; SSRF/rebinding/Settings tests use fixed public/private
+  answers instead of live DNS; unresolvable hosts now fail closed in
+  `validateEndpoint`.
 - **Admin destructive actions now require POST + session CSRF** (delete,
   publish/unpublish, toggle, schedule, plugin/theme enable/disable, logout).
   Shared `Wawoo\Plugin\Admin\Csrf` helper; dashboard actions rendered as

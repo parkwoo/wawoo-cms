@@ -20,6 +20,17 @@ final class S3SsrfTest extends TestCase
         $_POST = [];
         $_SERVER['REQUEST_METHOD'] = 'GET';
         unset($GLOBALS['WAWOO_S3']);
+        Client::$resolver = function (string $host): array {
+            $public = [
+                's3.amazonaws.com',
+                'cdn.example.com',
+                'example.com',
+                's3.example.com',
+                'example-bucket.s3.us-east-1.amazonaws.com',
+                's3.us-east-2.amazonaws.com',
+            ];
+            return in_array($host, $public, true) ? ['8.8.8.8'] : [];
+        };
         $this->resetConfigCache();
         $this->cleanupFiles();
     }
@@ -29,6 +40,7 @@ final class S3SsrfTest extends TestCase
         $_POST = [];
         $_SERVER['REQUEST_METHOD'] = 'GET';
         unset($GLOBALS['WAWOO_S3']);
+        Client::$resolver = null;
         $this->resetConfigCache();
         $this->cleanupFiles();
     }
