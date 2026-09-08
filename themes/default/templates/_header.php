@@ -66,6 +66,9 @@ $canonical      = $meta['canonical'];
                 <?= $__menu ?>
             <?php else: ?>
                 <a href="<?= htmlspecialchars(BASE_URL) ?>"><?= t('nav.home', 'Home') ?></a>
+                <?php foreach (\Wawoo\Core\Pages::all() as $pg): ?>
+                    <a href="<?= htmlspecialchars(BASE_URL) ?><?= htmlspecialchars($pg['slug']) ?>"><?= htmlspecialchars($pg['title']) ?></a>
+                <?php endforeach; ?>
                 <?php foreach ($stats['categories'] as $cat): ?>
                     <a href="<?= htmlspecialchars(BASE_URL) ?>?cat=<?= urlencode(strtolower($cat)) ?>"><?= htmlspecialchars($cat) ?></a>
                 <?php endforeach; ?>

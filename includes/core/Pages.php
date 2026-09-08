@@ -65,6 +65,10 @@ final class Pages
     /** List all pages (flat slug list), sorted by frontmatter order then slug. */
     public static function all(): array
     {
+        $cached = Cache::get('pages-all');
+        if ($cached !== null) {
+            return $cached;
+        }
         $dir = self::dir();
         if ($dir === '' || !is_dir($dir)) {
             return [];
@@ -91,6 +95,7 @@ final class Pages
             }
             return strcmp($a['slug'], $b['slug']);
         });
+        Cache::set('pages-all', $pages);
         return $pages;
     }
 
