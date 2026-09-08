@@ -377,9 +377,11 @@ final class Client
             return [0, ''];
         }
 
-        // Shared global outbound API rate cap (default 3 req/s, configurable).
-        $rate = isset($this->cfg['rate_per_second']) ? (int)$this->cfg['rate_per_second'] : 3;
-        if (!\Wawoo\Core\RateLimit::allow('outbound', $rate)) {
+        // Optional per-second cap shared across outbound clients. Off by
+        // default (rate_per_second <= 0 = unlimited); when set, the value is
+        // used as-is via Wawoo\Core\RateLimit.
+        $rate = isset($this->cfg['rate_per_second']) ? (int)$this->cfg['rate_per_second'] : 0;
+        if ($rate > 0 && !\Wawoo\Core\RateLimit::allow('outbound', $rate)) {
             return [429, ''];
         }
 

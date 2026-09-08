@@ -23,6 +23,7 @@
         "prefix": "media",
         "path_style": true,
         "force_path": false,
-        "allow_http": false
+        "allow_http": false,
+        "rate_per_second": 0
     }
 }

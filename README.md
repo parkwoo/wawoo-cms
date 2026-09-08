@@ -23,7 +23,7 @@ What makes it agent-friendly:
   don't need, or read the enabled list in one glance from
   `config.local.php`.
 
-**Version:** 1.0.0 · **Tests:** 319 PHPUnit · **PHP files:** 84+ · **Lines:** ~7,000
+**Version:** 1.0.0 · **Tests:** 320 PHPUnit · **PHP files:** 84+ · **Lines:** ~7,000
 
 ## Layout
 
@@ -65,7 +65,7 @@ wawoo-cms/
 │   ├── publish/               publish workflow + scheduled publishing   [optional]
 │   ├── s3/                    S3-compatible object storage sync         [optional]
 │   └── admin-totp/            TOTP second factor for /admin             [optional]
-├── tests/                     PHPUnit suite (319 tests)
+├── tests/                     PHPUnit suite (320 tests)
 ├── Dockerfile                 PHP 8.3 Apache, opcache tuned
 ├── docker-compose.yml         development compose
 ├── docker-compose.prod.yml    production compose
@@ -477,7 +477,7 @@ extensions enabled. Hardened defaults include `read_only`, `tmpfs`,
 ./vendor/bin/phpunit
 ```
 
-319 PHPUnit tests cover:
+320 PHPUnit tests cover:
 
 - **Unit:** `Hook`, `Manifest`, `Registry`, `Frontmatter`, `Cache`, `Posts`,
   `Pages`, `Markdown` (figures), `Theme`, `Autoloader`, `PluginManager`,

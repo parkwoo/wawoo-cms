@@ -11,10 +11,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `cache/comments/`, TOTP/rate state → `cache/admin-totp/`), which is the
   writable, web-denied, persistent volume — they now work under a
   read-only prod root filesystem.
-- **Shared outbound API rate limiter** (`Wawoo\Core\RateLimit`): a global
-  one-per-second cap across plugins/workers via the cache volume + flock;
-  the S3 client honours it (default 3 req/s, `rate_per_second`
-  configurable) so the aggregate external-API rate is bounded.
+- **Optional outbound rate limiter** (`Wawoo\Core\RateLimit`): a shared
+  per-second cap for external-API clients, opt-in per plugin (the s3
+  plugin's `rate_per_second`, default 0 = unlimited). The decision
+  (read → check → increment → write) runs inside one exclusive flock so
+  concurrent PHP workers stay within the configured cap; a parallel
+  multi-process test verifies it.
 - **S3 tests are network-independent**: `Client::$resolver` injects a DNS
   resolver; SSRF/rebinding/Settings tests use fixed public/private
   answers instead of live DNS; unresolvable hosts now fail closed in
