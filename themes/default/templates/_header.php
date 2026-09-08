@@ -62,7 +62,7 @@ $canonical      = $meta['canonical'];
     <div class="container">
         <a class="site-brand" href="<?= htmlspecialchars(BASE_URL) ?>"><?= htmlspecialchars(SITE_TITLE) ?></a>
         <nav class="site-nav" role="navigation" aria-label="<?= t('nav.label', 'Primary') ?>">
-            <button type="button" class="nav-toggle" aria-expanded="false" aria-controls="nav-menu" hidden>
+            <button type="button" class="nav-toggle" aria-expanded="false" aria-controls="nav-menu">
                 <span class="nav-toggle-label"><?= t('nav.menu', 'Menu') ?></span>
             </button>
             <?php $__menu = \Wawoo\Core\Hook::filter('theme.nav.items', null, $vars); ?>

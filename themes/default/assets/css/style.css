@@ -126,9 +126,11 @@ main.container { padding-block: 2.75rem 4rem; }
 }
 .site-nav a:hover { color: var(--accent); text-decoration: underline; text-underline-offset: .3em; }
 
-/* Mobile menu toggle + collapsible panel */
+/* Mobile menu toggle + collapsible panel (progressive enhancement:
+   without JS the full nav stays visible; with .has-nav-js the toggle and
+   the collapsed small-screen behaviour apply). */
 .nav-toggle {
-    display: none;
+    display: none; /* shown only when JS is active and screen is small */
     background: none;
     border: 1px solid var(--rule);
     border-radius: var(--radius-sm, 8px);
@@ -137,6 +139,7 @@ main.container { padding-block: 2.75rem 4rem; }
     padding: .35rem .9rem;
     cursor: pointer;
 }
+.has-nav-js .nav-menu { display: contents; } /* JS keeps desktop inline row */
 .nav-more { position: relative; }
 .nav-more-toggle {
     background: none;
@@ -150,10 +153,12 @@ main.container { padding-block: 2.75rem 4rem; }
     align-items: center;
     gap: .25rem;
 }
+/* Progressive: no JS → dropdown content visible; with JS → hidden until
+   opened (.nav-more-open). */
 .nav-more-menu {
     position: absolute;
     right: 0;
-    top: calc(100% + .35rem);
+    top: calc(100% + .4rem);
     min-width: 11rem;
     z-index: 30;
     background: var(--surface-raised);
@@ -164,6 +169,8 @@ main.container { padding-block: 2.75rem 4rem; }
     display: flex;
     flex-direction: column;
 }
+.has-nav-js .nav-more-menu { display: none; }
+.has-nav-js .nav-more.nav-more-open .nav-more-menu { display: flex; }
 .nav-more-menu a {
     padding: .4rem .7rem;
     border-radius: calc(var(--radius-sm, 8px) / 2);
@@ -171,17 +178,19 @@ main.container { padding-block: 2.75rem 4rem; }
 .nav-more-menu a:hover { background: var(--surface); }
 .nav-more-sep { border-top: 1px solid var(--rule); margin: .3rem 0; }
 @media (max-width: 48rem) {
-    .nav-toggle { display: inline-block; }
-    .nav-menu {
-        display: none;
+    /* Without JS everything stays open (progressive); with JS show a
+       Menu toggle and collapse the panel until opened. */
+    .has-nav-js .nav-toggle { display: inline-block; }
+    .has-nav-js .nav-menu { display: none; }
+    .has-nav-js .site-nav[data-open] .nav-menu { display: flex; }
+    .has-nav-js .nav-menu {
         flex-direction: column;
         width: 100%;
         order: 3;
         gap: .1rem;
         padding-block: .5rem;
     }
-    .site-nav[data-open] .nav-menu { display: flex; }
-    .nav-more-menu {
+    .has-nav-js .nav-more-menu {
         position: static;
         box-shadow: none;
         border: 0;
