@@ -295,12 +295,14 @@ Activate a theme by adding its name to `ENABLED_THEMES` in
 
 ### Shipped themes
 
-- **default** — GitHub-flavoured light/dark mode styling. Ships in this
-  repo.
-- **clay** — Claymorphism style ported from hirameki-loto's blog module.
-  Lives in its own repository (`wawoo-theme-clay`); install it with
-  `php bin/wawoo theme:link /path/to/wawoo-theme-clay` (add `--copy`
-  for Docker builds) before enabling it in `ENABLED_THEMES`.
+| Theme | Description | Repository |
+|-------|-------------|------------|
+| `default` | GitHub-flavoured light/dark mode styling | Ships in this repo |
+| `clay` | Claymorphism style ported from hirameki-loto's blog module | [parkwoo/wawoo-theme-clay](https://github.com/parkwoo/wawoo-theme-clay) |
+
+The `clay` theme lives in its own repository; install it with
+`php bin/wawoo theme:link /path/to/wawoo-theme-clay` (add `--copy` for
+Docker builds) before enabling it in `ENABLED_THEMES`.
 
 ### Theme hooks
 
@@ -350,25 +352,34 @@ at `wawoo-plugin-<name>` and is linked into this repo's `plugins/` with
 `plugin:link`, then enabled (all OFF by default) in `config.local.php`
 `ENABLED_PLUGINS` or via `/admin → Plugins`:
 
-- `wawoo-plugin-pagination` — numbered pagination (1 2 3 … with ellipsis)
-- `wawoo-plugin-analytics` — Google Analytics injector
-- `wawoo-plugin-password-gate` — site-wide password gate (rate-limited, HMAC cookie)
-- `wawoo-plugin-maintenance` — maintenance mode: 503 + `Retry-After` page
-- `wawoo-plugin-comments` — comment form + admin moderation queue
-- `wawoo-plugin-tag-cloud` — font-sized tag cloud on the index
-- `wawoo-plugin-sitemap-html` — human-readable HTML sitemap at `/sitemap-page`
-- `wawoo-plugin-i18n` — UI translation (en/ja/zh) via a `t()` template helper
-- `wawoo-plugin-mlang` — multi-language content (`/ja/post/<slug>`, …)
-- `wawoo-plugin-admin-totp` — TOTP second factor for `/admin`
- - `wawoo-plugin-publish` — publish workflow + scheduled publishing
- - `wawoo-plugin-s3` — S3-compatible object storage sync
- - `wawoo-plugin-mermaid` — renders ```mermaid fenced diagrams to SVG
+| Plugin | Description | Repository |
+|--------|-------------|------------|
+| `wawoo-plugin-pagination` | Numbered pagination (1 2 3 … with ellipsis) | [parkwoo/wawoo-plugin-pagination](https://github.com/parkwoo/wawoo-plugin-pagination) |
+| `wawoo-plugin-analytics` | Google Analytics injector | [parkwoo/wawoo-plugin-analytics](https://github.com/parkwoo/wawoo-plugin-analytics) |
+| `wawoo-plugin-password-gate` | Site-wide password gate (rate-limited, HMAC cookie) | [parkwoo/wawoo-plugin-password-gate](https://github.com/parkwoo/wawoo-plugin-password-gate) |
+| `wawoo-plugin-maintenance` | Maintenance mode: 503 + `Retry-After` page | [parkwoo/wawoo-plugin-maintenance](https://github.com/parkwoo/wawoo-plugin-maintenance) |
+| `wawoo-plugin-comments` | Comment form + admin moderation queue | [parkwoo/wawoo-plugin-comments](https://github.com/parkwoo/wawoo-plugin-comments) |
+| `wawoo-plugin-tag-cloud` | Font-sized tag cloud on the index | [parkwoo/wawoo-plugin-tag-cloud](https://github.com/parkwoo/wawoo-plugin-tag-cloud) |
+| `wawoo-plugin-sitemap-html` | Human-readable HTML sitemap at `/sitemap-page` | [parkwoo/wawoo-plugin-sitemap-html](https://github.com/parkwoo/wawoo-plugin-sitemap-html) |
+| `wawoo-plugin-i18n` | UI translation (en/ja/zh) via a `t()` template helper | [parkwoo/wawoo-plugin-i18n](https://github.com/parkwoo/wawoo-plugin-i18n) |
+| `wawoo-plugin-mlang` | Multi-language content (`/ja/post/<slug>`, …) | [parkwoo/wawoo-plugin-mlang](https://github.com/parkwoo/wawoo-plugin-mlang) |
+| `wawoo-plugin-admin-totp` | TOTP second factor for `/admin` | [parkwoo/wawoo-plugin-admin-totp](https://github.com/parkwoo/wawoo-plugin-admin-totp) |
+| `wawoo-plugin-publish` | Publish workflow + scheduled publishing | [parkwoo/wawoo-plugin-publish](https://github.com/parkwoo/wawoo-plugin-publish) |
+| `wawoo-plugin-s3` | S3-compatible object storage sync | [parkwoo/wawoo-plugin-s3](https://github.com/parkwoo/wawoo-plugin-s3) |
+| `wawoo-plugin-mermaid` | Renders Mermaid fenced diagrams to SVG | [parkwoo/wawoo-plugin-mermaid](https://github.com/parkwoo/wawoo-plugin-mermaid) |
+| `wawoo-plugin-code` | Code-block language labels, copy button & syntax highlighting | [parkwoo/wawoo-plugin-code](https://github.com/parkwoo/wawoo-plugin-code) |
 
+Install any of them from a wawoo-cms checkout:
 
 ```bash
-cd /path/to/wawoo-cms
-php bin/wawoo plugin:link /path/to/wawoo-plugin-comments   # symlink
-php bin/wawoo plugin:link /path/to/wawoo-plugin-s3 --copy # copy (Docker)
+cd /path/to
+git clone https://github.com/parkwoo/wawoo-cms
+git clone https://github.com/parkwoo/wawoo-plugin-comments
+git clone https://github.com/parkwoo/wawoo-plugin-s3
+
+cd wawoo-cms
+php bin/wawoo plugin:link ../wawoo-plugin-comments           # symlink
+php bin/wawoo plugin:link ../wawoo-plugin-s3 --copy          # copy (Docker)
 ```
 
 Themes work the same way: `default` ships in this repo, and the `clay`
@@ -379,18 +390,31 @@ Docker), then enabled via `ENABLED_THEMES`.
 ### Version pinning & updates
 
 Each optional plugin repo (`wawoo-plugin-*`) and the `clay` theme repo
-(`wawoo-theme-clay`) is versioned independently (tagged `v1.0.0`), and
-its manifest `requires` states the core version it is built against
-(`core >= 1.0.0`).
+(`wawoo-theme-clay`) is versioned independently (each tagged at its own
+version), and its manifest `requires` states the core version it is built
+against (`core >= 1.0.0`).
 
 To pin a deployment, choose a wawoo-cms tag and a matching tag for each
-optional plugin you use, and record the combination. For the current
-v1.0.0 line the compatible set is simply:
+optional plugin you use, and record the combination. The currently
+published versions are:
 
 | Repo | Tag |
 |------|-----|
 | wawoo-cms | v1.0.0 |
-| wawoo-plugin-* (each optional plugin) | v1.0.0 |
+| wawoo-plugin-admin-totp | v1.0.0 |
+| wawoo-plugin-analytics | v1.0.0 |
+| wawoo-plugin-code | v1.3.1 |
+| wawoo-plugin-comments | v1.0.0 |
+| wawoo-plugin-i18n | v1.0.0 |
+| wawoo-plugin-maintenance | v1.0.0 |
+| wawoo-plugin-mermaid | v1.1.3 |
+| wawoo-plugin-mlang | v1.0.0 |
+| wawoo-plugin-pagination | v1.0.0 |
+| wawoo-plugin-password-gate | v1.0.0 |
+| wawoo-plugin-publish | v1.0.0 |
+| wawoo-plugin-s3 | v1.0.0 |
+| wawoo-plugin-sitemap-html | v1.0.0 |
+| wawoo-plugin-tag-cloud | v1.0.0 |
 | wawoo-theme-clay | v1.0.0 |
 
 When building Docker images, install with `--copy` inside the build so
@@ -403,15 +427,14 @@ php bin/wawoo plugin:link /path/to/wawoo-plugin-<name> --copy
 
 #### Complete pinned install example (core + comments + i18n + s3 + clay)
 
-Once the repos are on GitHub, a fully tag-pinned install looks like this.
-Replace the `<…-repo-url>` placeholders with the actual repository URLs:
+A fully tag-pinned install looks like this:
 
 ```bash
-git clone --branch v1.0.0 <core-repo-url>     wawoo-cms
-git clone --branch v1.0.0 <comments-repo-url> wawoo-plugin-comments
-git clone --branch v1.0.0 <i18n-repo-url>     wawoo-plugin-i18n
-git clone --branch v1.0.0 <s3-repo-url>       wawoo-plugin-s3
-git clone --branch v1.0.0 <clay-repo-url>     wawoo-theme-clay
+git clone --branch v1.0.0 https://github.com/parkwoo/wawoo-cms     wawoo-cms
+git clone --branch v1.0.0 https://github.com/parkwoo/wawoo-plugin-comments wawoo-plugin-comments
+git clone --branch v1.0.0 https://github.com/parkwoo/wawoo-plugin-i18n wawoo-plugin-i18n
+git clone --branch v1.0.0 https://github.com/parkwoo/wawoo-plugin-s3 wawoo-plugin-s3
+git clone --branch v1.0.0 https://github.com/parkwoo/wawoo-theme-clay wawoo-theme-clay
 
 cd wawoo-cms
 php bin/wawoo plugin:link ../wawoo-plugin-comments --copy
