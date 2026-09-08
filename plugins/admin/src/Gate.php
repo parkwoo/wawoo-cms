@@ -79,21 +79,10 @@ final class Gate
             exit;
         }
 
-        if (isset($_GET['logout'])) {
-            if (!Csrf::verify($_GET['csrf'] ?? null)) {
-                http_response_code(403);
-                echo '<h1>Invalid or missing CSRF token</h1><p><a href="/admin/">Back</a></p>';
-                exit;
-            }
-            unset($_SESSION['wawoo_admin']);
-            header('Location: /admin/');
-            exit;
-        }
-
         // All state-changing admin actions require POST + CSRF token.
         $action = $_GET['action'] ?? 'dashboard';
         if (in_array($action, [
-            'delete', 'toggle', 'publish', 'unpublish', 'schedule-submit',
+            'logout', 'delete', 'toggle', 'publish', 'unpublish', 'schedule-submit',
             'enable-plugin', 'disable-plugin', 'enable-theme',
         ], true)) {
             $isPost = ($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST';
@@ -105,6 +94,10 @@ final class Gate
         }
 
         switch ($action) {
+            case 'logout':
+                unset($_SESSION['wawoo_admin']);
+                header('Location: /admin/');
+                exit;
             case 'delete':
                 $slug = preg_replace('/[^a-zA-Z0-9_-]/', '', (string)($_POST['slug'] ?? ''));
                 if ($slug !== '' && Posts::deleteBySlug($slug)) {

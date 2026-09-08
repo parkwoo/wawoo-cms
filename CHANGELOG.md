@@ -8,9 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security
 - **Admin destructive actions now require POST + session CSRF** (delete,
-  publish/unpublish, toggle, schedule, plugin/theme enable/disable). Shared
-  `Wawoo\Plugin\Admin\Csrf` helper; dashboard actions rendered as inline
-  POST forms with a hidden token.
+  publish/unpublish, toggle, schedule, plugin/theme enable/disable, logout).
+  Shared `Wawoo\Plugin\Admin\Csrf` helper; dashboard actions rendered as
+  inline POST forms with a hidden token.
 - **Admin login hardening**: per-IP login rate limiting (5 failures →
   429 lockout), `session_regenerate_id(true)` on success, `password_verify`
   against `$GLOBALS['WAWOO_ADMIN']['password_hash']` (plaintext
@@ -24,6 +24,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Cookies**: `session.cookie_secure`, `use_strict_mode`,
   `use_only_cookies` documented; prod compose sets `cookie_secure=1`
   behind a TLS proxy.
+- **Public directory isolation**: static passthrough now allow-lists only
+  public assets (theme assets, uploads, post/page bundle media). Raw
+  markdown (incl. drafts), cache JSON (contact/comments PII, draft caches),
+  plugin data, includes and config secrets are never served — enforced in
+  router (`Wawoo\Core\PublicAssets`) and Apache `.htaccess`
+  (`cache|includes|plugins` + md/json deny). nginx sample gained matching
+  deny blocks. Front controllers stay executable.
+- **Production persistence**: `docker-compose.prod.yml` mounts persistent
+  named volumes for posts/pages/uploads/cache (state) so the admin console
+  works under `read_only` root; one-shot `init-volumes` chowns them; cache
+  no longer on tmpfs.
+- **Comments moderation redirect** no longer trusts `HTTP_REFERER`
+  verbatim (open-redirect) — only same-origin `/admin` paths are honoured.
+- **Host-header hardening**: `ALLOWED_HOSTS` guard — when set, the
+  BASE_URL fallback (from the Host header) is refused for unknown hosts;
+  production should hard-code BASE_URL and ALLOWED_HOSTS.
+- **`Theme::asset()` reflects BASE_PATH** (subdirectory installs).
 
 ### Added
 - **Fixed pages**: `pages/<slug>/index.md` served at their own top-level

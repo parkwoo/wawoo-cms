@@ -1,5 +1,14 @@
 # Example production override.
 # Copy to docker-compose.override.yml or pass with -f.
+#
+# Root filesystem is read-only, but the CMS admin console (posts publish/
+# delete, plugin/theme state, contact inbox, comments) writes to disk. Those
+# stateful paths must be mounted as persistent named volumes — see volumes
+# below. Snapshot/back up these volumes (wawoo_posts, wawoo_pages,
+# wawoo_uploads, wawoo_state) together; they are the site's source of truth.
+#
+# To update the app image you only replace the image tag; content lives in
+# the volumes.
 services:
   wawoo:
     image: ghcr.io/your-org/wawoo-cms:1.0.0
@@ -15,6 +24,32 @@ services:
     read_only: true
     tmpfs:
       - /tmp
-      - /var/www/html/cache
+    volumes:
+      - wawoo_posts:/var/www/html/posts        # markdown bundles (editable)
+      - wawoo_pages:/var/www/html/pages        # fixed pages
+      - wawoo_uploads:/var/www/html/uploads    # uploaded media
+      - wawoo_state:/var/www/html/cache        # plugin/theme state, contact
+                                               # inbox, comments, caches
     cap_drop: [ALL]
     security_opt: [no-new-privileges:true]
+
+  # One-shot chown so the Apache worker (www-data) can write the named
+  # volumes. Runs before the main service on first deploy.
+  init-volumes:
+    image: ghcr.io/your-org/wawoo-cms:1.0.0
+    user: root
+    volumes:
+      - wawoo_posts:/var/www/html/posts
+      - wawoo_pages:/var/www/html/pages
+      - wawoo_uploads:/var/www/html/uploads
+      - wawoo_state:/var/www/html/cache
+    entrypoint:
+      - /bin/sh
+      - -c
+      - chown -R www-data:www-data /var/www/html/posts /var/www/html/pages /var/www/html/uploads /var/www/html/cache
+
+volumes:
+  wawoo_posts:
+  wawoo_pages:
+  wawoo_uploads:
+  wawoo_state:

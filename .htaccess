@@ -1,13 +1,34 @@
 RewriteEngine On
 
-# Block direct access to sensitive files.
-<FilesMatch "^(\.env|config\.local\.php|composer\.(json|lock)|README\.md|CHANGELOG\.md|VERSION)$">
-    Require all denied
-</FilesMatch>
+# Sensitive paths and extensions are hard-denied BEFORE the pretty-URL
+# rewrites: cache/includes/plugins data, raw markdown (incl. drafts), JSON
+# caches/inboxes, config secrets and dotfiles. RewriteRules run even for
+# real files, so this also covers Apache setups that serve existing files
+# without invoking router.php.
+<IfModule mod_rewrite.c>
+    RewriteRule ^(cache|includes|plugins)/ - [F,L]
+    RewriteRule ^themes/.*\.php$ - [F,L]
+    RewriteRule ^\.git(/|$) - [F,L]
+    RewriteRule ^(config\.local\.php|\.env|composer\.(json|lock)|README\.md|CHANGELOG\.md|VERSION)$ - [F,L]
+    RewriteRule \.(md|markdown|json|phtml|log|lock|sql|sh)$ - [F,L]
+</IfModule>
 
-# Block direct access to the core/ directory (still reachable via require,
-# but never by the web).
+# Block direct access to sensitive files. NOTE: front controllers
+# (index/post/page/dispatch/router.php) must stay executable, so only
+# non-entry PHP (core internals, plugin src, config) is denied here.
 <IfModule mod_authz_core.c>
+    <FilesMatch "\.(md|markdown|json|phtml|log|lock|sql|sh|env)$">
+        Require all denied
+    </FilesMatch>
+    <FilesMatch "^(\.env|config\.local\.php|composer\.(json|lock)|README\.md|CHANGELOG\.md|VERSION)$">
+        Require all denied
+    </FilesMatch>
+
+    # Block direct access to internals that must only be reached via require:
+    # includes/core/*, includes/Parsedown.php, and plugin/theme src files.
+    <FilesMatch "(^|/)(includes|plugins|themes)/.*\.php$">
+        Require all denied
+    </FilesMatch>
     <FilesMatch "(core|src)\.php$">
         Require all denied
     </FilesMatch>

@@ -10,10 +10,25 @@
 
 // URL paths. Override in config.local.php if installed under a subpath.
 // BASE_URL always ends with a single trailing slash.
+//
+// Production: set BASE_URL to the canonical origin AND list allowed host
+// names in ALLOWED_HOSTS, otherwise the base URL is derived from the Host
+// header and is vulnerable to Host-header poisoning (canonical/SEO abuse).
+// An empty ALLOWED_HOSTS disables the check (development convenience).
 if (!defined('BASE_PATH')) define('BASE_PATH', '/');
+if (!defined('ALLOWED_HOSTS')) define('ALLOWED_HOSTS', []);
 if (!defined('BASE_URL')) {
     $__proto = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https://' : 'http://';
     $__host  = $_SERVER['HTTP_HOST'] ?? 'localhost';
+    $__hostNoPort = preg_replace('/:\d+$/', '', (string)$__host);
+    if (defined('ALLOWED_HOSTS') && is_array(ALLOWED_HOSTS) && ALLOWED_HOSTS !== []) {
+        $__ok = in_array($__hostNoPort, ALLOWED_HOSTS, true) || in_array($__host, ALLOWED_HOSTS, true);
+        if (!$__ok) {
+            http_response_code(400);
+            header('Content-Type: text/plain; charset=utf-8');
+            exit('Host not allowed.');
+        }
+    }
     define('BASE_URL', $__proto . $__host . '/');
 }
 

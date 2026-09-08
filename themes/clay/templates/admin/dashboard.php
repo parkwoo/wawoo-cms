@@ -40,7 +40,11 @@ $actForm = function (string $action, string $value, string $label, bool $confirm
         &middot;
         <a href="<?= htmlspecialchars($base) ?>?action=themes"><?= t('admin.themes', 'Themes') ?></a>
         &middot;
-        <a href="<?= htmlspecialchars($base) ?>?logout=1&amp;csrf=<?= urlencode(\Wawoo\Plugin\Admin\Csrf::token()) ?>"><?= t('admin.logout', 'Logout') ?></a>
+        <form method="post" action="<?= htmlspecialchars($base) ?>" style="display:inline">
+            <input type="hidden" name="csrf" value="<?= htmlspecialchars(\Wawoo\Plugin\Admin\Csrf::token(), ENT_QUOTES, 'UTF-8') ?>">
+            <input type="hidden" name="action" value="logout">
+            <button type="submit" style="background:none;border:0;color:#8E7CC3;cursor:pointer;padding:0;font:inherit;text-decoration:underline"><?= t('admin.logout', 'Logout') ?></button>
+        </form>
     </p>
 
     <?php if ($action === 'plugins'): ?>

@@ -21,6 +21,11 @@ final class EndToEndTest extends TestCase
         if (PHP_SAPI !== 'cli' && PHP_SAPI !== 'phpdbg') {
             self::markTestSkipped('E2E requires CLI PHP.');
         }
+        $probe = @stream_socket_server('tcp://127.0.0.1:0', $errno, $errstr);
+        if ($probe === false) {
+            self::markTestSkipped('Sockets unavailable (cannot bind test server): ' . $errstr);
+        }
+        fclose($probe);
         $base = dirname(__DIR__, 2);
         self::$docroot = dirname(__DIR__) . '/_tmp/e2e_site';
         self::rm(self::$docroot);
@@ -71,6 +76,20 @@ final class EndToEndTest extends TestCase
         }
         // Fresh cache dir owned by the test docroot.
         mkdir(self::$docroot . '/cache', 0755, true);
+
+        // Sensitive real files a vulnerable static passthrough would serve
+        // verbatim (draft lists, contact PII inboxes, plugin data).
+        if (!is_dir(self::$docroot . '/cache/contact')) {
+            mkdir(self::$docroot . '/cache/contact', 0755, true);
+        }
+        file_put_contents(self::$docroot . '/cache/contact/inbox-1.json',
+            '{"name":"Jane","email":"jane@example.com","message":"secret inquiry"}');
+        file_put_contents(self::$docroot . '/cache/posts.json', '{"draft-post":"draft body"}');
+        if (!is_dir(self::$docroot . '/plugins/comments/data')) {
+            mkdir(self::$docroot . '/plugins/comments/data', 0755, true);
+        }
+        file_put_contents(self::$docroot . '/plugins/comments/data/x.json',
+            '{"author":"Troll","email":"troll@example.com","body":"flame"}');
 
         // Bilingual content for the mlang plugin: translations share the
         // bundle folder and are reached through /ja|zh prefixed URLs.
@@ -224,6 +243,37 @@ final class EndToEndTest extends TestCase
         $this->assertSame(200, $status);
     }
 
+    public function testSensitiveFilesAreNeverServedStatically(): void
+    {
+        // Raw markdown (drafts/bundles) must not be served verbatim; the
+        // router falls through to dispatch, which renders the 404.
+        [$mdStatus, $mdBody] = self::request('GET', '/posts/bundled/index.md');
+        $this->assertSame(404, $mdStatus);
+        $this->assertStringNotContainsString('Bundled content', $mdBody);
+
+        // Existing JSON cache files (draft lists, contact PII inboxes).
+        [$inboxStatus] = self::request('GET', '/cache/contact/inbox-1.json');
+        $this->assertSame(404, $inboxStatus);
+        [$cacheStatus] = self::request('GET', '/cache/posts.json');
+        $this->assertSame(404, $cacheStatus);
+
+        // Plugin data files (even existing ones) are never statically served.
+        [$pluginStatus] = self::request('GET', '/plugins/comments/data/x.json');
+        $this->assertSame(404, $pluginStatus);
+
+        // Includes and config secrets are never served verbatim either.
+        [$includeStatus] = self::request('GET', '/includes/core/Bootstrap.php');
+        $this->assertSame(404, $includeStatus);
+        [$configStatus] = self::request('GET', '/config.local.php');
+        $this->assertSame(404, $configStatus);
+
+        // Public bundle media and page-bundle media stay reachable.
+        [$svgStatus] = self::request('GET', '/posts/bundled/hero.svg');
+        $this->assertSame(200, $svgStatus);
+        [$pageSvgStatus] = self::request('GET', '/pages/about/sample.svg');
+        $this->assertSame(200, $pageSvgStatus);
+    }
+
     public function testPrettyPostUrlServesPost(): void
     {
         [$status, $body] = self::request('GET', '/post/welcome');
@@ -366,6 +416,24 @@ final class EndToEndTest extends TestCase
         $this->assertSame(200, $status2);
         $this->assertStringContainsString('Dashboard', $body2);
         $this->assertStringContainsString('Welcome E2E', $body2);
+    }
+
+    public function testAdminLogoutRequiresPostAndCsrf(): void
+    {
+        [$cookies] = $this->loginAdmin();
+        // GET logout is refused.
+        [$status] = self::request('GET', '/admin/?action=logout', $cookies);
+        $this->assertSame(403, $status);
+        // POST without csrf is refused and session stays alive.
+        [$status] = self::request('POST', '/admin/?action=logout', $cookies, []);
+        $this->assertSame(403, $status);
+        // POST with csrf logs out.
+        $csrf = $this->adminCsrf($cookies);
+        [$status] = self::request('POST', '/admin/?action=logout', $cookies, ['csrf' => $csrf]);
+        $this->assertTrue($status === 200 || $status === 302);
+        [$s2, $b2] = self::request('GET', '/admin/', $cookies);
+        $this->assertSame(200, $s2);
+        $this->assertStringContainsString('Admin login', $b2);
     }
 
     public function testAdminLoginRegeneratesSessionId(): void

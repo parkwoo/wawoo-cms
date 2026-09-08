@@ -33,7 +33,8 @@ final class Theme
 
     public static function asset(string $relative): string
     {
-        return '/themes/' . self::$active . '/assets/' . ltrim($relative, '/');
+        $base = defined('BASE_PATH') ? rtrim(BASE_PATH, '/') : '';
+        return $base . '/themes/' . self::$active . '/assets/' . ltrim($relative, '/');
     }
 
     /**

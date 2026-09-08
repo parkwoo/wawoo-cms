@@ -23,7 +23,7 @@ What makes it agent-friendly:
   don't need, or read the enabled list in one glance from
   `config.local.php`.
 
-**Version:** 1.0.0 · **Tests:** 276 PHPUnit · **PHP files:** 84+ · **Lines:** ~7,000
+**Version:** 1.0.0 · **Tests:** 308 PHPUnit · **PHP files:** 84+ · **Lines:** ~7,000
 
 ## Layout
 
@@ -65,7 +65,7 @@ wawoo-cms/
 │   ├── publish/               publish workflow + scheduled publishing   [optional]
 │   ├── s3/                    S3-compatible object storage sync         [optional]
 │   └── admin-totp/            TOTP second factor for /admin             [optional]
-├── tests/                     PHPUnit suite (276 tests)
+├── tests/                     PHPUnit suite (308 tests)
 ├── Dockerfile                 PHP 8.3 Apache, opcache tuned
 ├── docker-compose.yml         development compose
 ├── docker-compose.prod.yml    production compose
@@ -272,12 +272,28 @@ falls through to the 404 template.
 Nginx example:
 
 ```nginx
-location /blog {
-    root /var/www;
-    try_files $uri $uri/ /blog/router.php?$args;
-    location ~ \.php$ { fastcgi_pass unix:/run/php/php-fpm.sock; ... }
+server {
+    # ...
+    location /blog {
+        root /var/www;
+        # deny non-public data: cache/includes/plugins, markdown, json
+        location ~ ^/blog/(cache|includes|plugins)/ { return 404; }
+        location ~* \.(md|markdown|json|log|lock|sql|sh)$ { return 404; }
+        location ~ ^/blog/(\.env|config\.local\.php|composer\.(json|lock)|README\.md|CHANGELOG\.md|VERSION)$ { return 404; }
+        try_files $uri $uri/ /blog/router.php?$args;
+        location ~ \.php$ { fastcgi_pass unix:/run/php/php-fpm.sock; ... }
+    }
 }
 ```
+
+Serving static files safely: the web server must never serve `cache/`,
+`includes/`, `plugins/`, `*.md` or `*.json` verbatim — cache files hold
+draft lists, contact/comments inboxes and plugin settings, and markdown
+includes unpublished drafts. The shipped `router.php` already restricts
+static passthrough to theme assets, uploads and post/page bundle media
+(via `includes/core/PublicAssets.php`), and the shipped `.htaccess`
+enforces the same denies for Apache. Any other existing file is left to
+dispatch, which returns 404.
 
 Apache `.htaccess` is shipped for pretty URL rewrites, security headers,
 compression, and caching rules.
@@ -457,7 +473,7 @@ extensions enabled. Hardened defaults include `read_only`, `tmpfs`,
 ./vendor/bin/phpunit
 ```
 
-276 PHPUnit tests cover:
+308 PHPUnit tests cover:
 
 - **Unit:** `Hook`, `Manifest`, `Registry`, `Frontmatter`, `Cache`, `Posts`,
   `Pages`, `Markdown` (figures), `Theme`, `Autoloader`, `PluginManager`,

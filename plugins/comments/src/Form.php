@@ -123,7 +123,21 @@ final class Form
             case 'spam':      Store::updateStatus($slug, $id, 'spam');     break;
             case 'delete':    Store::delete($slug, $id);                   break;
         }
-        $back = $_SERVER['HTTP_REFERER'] ?? '/admin/?action=comments';
+        // Redirect back to the admin comments view, but never to an
+        // arbitrary external URL (HTTP_REFERER can be attacker-controlled,
+        // so only same-origin /admin paths are honoured).
+        $back = '/admin/?action=comments';
+        $ref  = (string)($_SERVER['HTTP_REFERER'] ?? '');
+        if ($ref !== '') {
+            $refPath = parse_url($ref, PHP_URL_PATH) ?: '';
+            $refHost = parse_url($ref, PHP_URL_HOST) ?: '';
+            $self    = parse_url(BASE_URL, PHP_URL_HOST) ?: '';
+            if ($refHost === '' || $refHost === $self || $refHost === ($_SERVER['HTTP_HOST'] ?? '')) {
+                if (strpos($refPath, '/admin') === 0) {
+                    $back = $refPath;
+                }
+            }
+        }
         header('Location: ' . $back);
         exit;
     }

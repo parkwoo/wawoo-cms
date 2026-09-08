@@ -136,7 +136,13 @@ PHP, 'stub-post');
         }
         $file = $tmp . '.php';
         $bootstrap = dirname(__DIR__, 2) . '/tests/bootstrap.php';
-        file_put_contents($file, "<?php\nrequire \$argv[1];\nregister_shutdown_function(function () { fwrite(STDOUT, '\\n__EXIT__\\n'); });\n" . $body . "\n");
+        $sessionDir = sys_get_temp_dir() . '/wawoo_sess_' . bin2hex(random_bytes(4));
+        mkdir($sessionDir, 0755, true);
+        file_put_contents($file, "<?php\n"
+            . "session_save_path(" . var_export($sessionDir, true) . ");\n"
+            . "require \$argv[1];\n"
+            . "register_shutdown_function(function () { fwrite(STDOUT, '\\n__EXIT__\\n'); });\n"
+            . $body . "\n");
         try {
             if (!function_exists('shell_exec')) {
                 $this->markTestSkipped('shell_exec is not available.');

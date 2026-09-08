@@ -15,6 +15,10 @@ define('AUTHOR_EMAIL',     'you@example.com');
 define('BASE_URL',  'https://blog.example.com/');
 define('BASE_PATH', '/');
 
+// Hosts allowed to reach this site (Host-header poisoning guard). Used when
+// BASE_URL is not hard-coded; keep empty to disable the check (dev only).
+define('ALLOWED_HOSTS', ['blog.example.com']);
+
 // Cache
 define('CACHE_ENABLED',  true);
 define('CACHE_DURATION', 3600);

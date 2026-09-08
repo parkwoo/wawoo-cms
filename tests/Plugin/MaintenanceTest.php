@@ -50,6 +50,11 @@ final class MaintenanceTest extends TestCase
         if (!is_executable('/usr/bin/curl') && trim((string)shell_exec('command -v curl 2>/dev/null')) === '') {
             self::markTestSkipped('curl binary is required for maintenance HTTP tests.');
         }
+        $probe = @stream_socket_server('tcp://127.0.0.1:0', $errno, $errstr);
+        if ($probe === false) {
+            self::markTestSkipped('Sockets unavailable (cannot bind test server): ' . $errstr);
+        }
+        fclose($probe);
         $base = dirname(__DIR__, 2);
         self::$isoDir = sys_get_temp_dir() . '/wawoo_maint_' . bin2hex(random_bytes(4));
         mkdir(self::$isoDir, 0755, true);

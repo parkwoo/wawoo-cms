@@ -1,7 +1,13 @@
 <?php
 /**
  * Core router. Pretty URLs for the CMS itself: home, single posts and
- * category/tag filters. Static files pass through untouched.
+ * category/tag filters.
+ *
+ * Static passthrough is strictly allow-listed (see PublicAssets): only
+ * theme assets, uploads, post/page bundle media and /favicon.ico may be
+ * served verbatim. Everything else — cache JSON, raw markdown (including
+ * drafts), plugin data, includes, config secrets, dotfiles — falls through
+ * to dispatch.php, which 404s.
  *
  * Every other URL is delegated to dispatch.php, which fires the
  * `core.request` hook so feature plugins (rss, search, admin, sitemap,
@@ -14,15 +20,26 @@
 
 declare(strict_types=1);
 
+require __DIR__ . '/includes/core/PublicAssets.php';
+
 $root = __DIR__;
 
 $path = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/';
 $path = '/' . trim($path, '/');
 
-// Direct file passthrough (assets, themes, posts files).
-$candidate = $root . $path;
-if ($path !== '/' && is_file($candidate)) {
-    return false;
+// Static passthrough only for allow-listed public assets. realpath() guards
+// against traversal/symlink escapes: the resolved file must be a real file
+// inside the site root. Any other existing file is NOT served here and is
+// left to dispatch.php (404) below.
+if ($path !== '/' && \Wawoo\Core\PublicAssets::allowed($root, $path)) {
+    $file    = realpath($root . $path);
+    $rootDir = realpath($root);
+    if ($file !== false
+        && $rootDir !== false
+        && str_starts_with($file, $rootDir . DIRECTORY_SEPARATOR)
+        && is_file($file)) {
+        return false;
+    }
 }
 
 if ($path === '/' || $path === '') {
@@ -90,7 +107,7 @@ if (preg_match('#^/([a-zA-Z0-9_-]+)$#', $path, $m)) {
     }
 }
 
-// Not a core route and not a real file: give plugins a chance via
-// dispatch.php (fires core.request), then 404 if unclaimed.
+// Anything not served statically and not a core route goes to dispatch.php
+// (fires core.request), then 404s if unclaimed.
 require $root . '/dispatch.php';
 return true;
