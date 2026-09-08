@@ -295,6 +295,30 @@ switch ($cmd) {
             }
             echo "linked $payloadDir -> $target\n";
         }
+        // Also link the plugin's own PHPUnit tests (tests/Plugin/*.php in the
+        // standalone repo) into this checkout so the testing contract works:
+        //   phpunit tests/Plugin/<Name>*Test.php
+        if ($isPlugin && is_dir($src . '/tests/Plugin')) {
+            $testsTarget = $root . '/tests/Plugin';
+            if (!is_dir($testsTarget)) {
+                mkdir($testsTarget, 0755, true);
+            }
+            foreach (glob($src . '/tests/Plugin/*.php') as $tf) {
+                $base = basename($tf);
+                $dest = $testsTarget . '/' . $base;
+                if (file_exists($dest)) {
+                    fwrite(STDERR, "warn: tests/Plugin/$base already exists; skipped\n");
+                    continue;
+                }
+                if (flag($args, '--copy')) {
+                    copy($tf, $dest);
+                    echo "copied tests/Plugin/$base\n";
+                } else {
+                    symlink($tf, $dest);
+                    echo "linked tests/Plugin/$base\n";
+                }
+            }
+        }
         break;
 
     case 'doctor':

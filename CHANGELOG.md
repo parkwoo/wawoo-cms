@@ -19,7 +19,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `theme:link <repo> [--copy]` install a standalone plugin/theme repo
   into this checkout (symlink by default, `--copy` for Docker images).
   Plugin manifests/hooks contract is unchanged; optional-plugin tests run
-  from this repo after linking (`phpunit tests/Plugin/<Name>*Test.php`).
+  from this repo after linking (`phpunit tests/Plugin/<Name>*Test.php`) —
+  `plugin:link` also links the repo's own `tests/Plugin/*.php` into this
+  checkout.
 - `config.example.php` default `ENABLED_PLUGINS` = core set; optional
   plugins are enabled per site after `plugin:link`.
 
