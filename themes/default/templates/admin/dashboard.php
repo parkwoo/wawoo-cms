@@ -17,44 +17,47 @@ $posts = $vars['posts'] ?? [];
 $stats = $vars['stats'] ?? [];
 $base  = (string)($vars['base'] ?? $_SERVER['PHP_SELF']);
 $action = (string)($vars['action'] ?? 'dashboard');
-$actForm = function (string $action, string $value, string $label, bool $confirm = false, string $field = 'slug', string $color = '#0071e3') use ($base): string {
+$actForm = function (string $action, string $value, string $label, bool $confirm = false, string $field = 'slug', bool $danger = false) use ($base): string {
     $confirmAttr = '';
     if ($confirm) {
         $msg = sprintf(t('admin.confirm_delete', 'Delete %s?'), $value);
         $confirmAttr = ' onsubmit="return confirm(\'' . htmlspecialchars(addslashes($msg), ENT_QUOTES, 'UTF-8') . '\')"';
     }
-    return '<form method="post" action="' . htmlspecialchars($base . '?action=' . $action) . '" style="display:inline"' . $confirmAttr . '>'
+    return '<form method="post" action="' . htmlspecialchars($base . '?action=' . $action) . '" class="act-form"' . $confirmAttr . '>'
         . '<input type="hidden" name="csrf" value="' . htmlspecialchars(\Wawoo\Plugin\Admin\Csrf::token(), ENT_QUOTES, 'UTF-8') . '">'
         . '<input type="hidden" name="action" value="' . htmlspecialchars($action) . '">'
         . '<input type="hidden" name="' . htmlspecialchars($field) . '" value="' . htmlspecialchars($value) . '">'
-        . '<button type="submit" style="background:none;border:0;color:' . $color . ';cursor:pointer;padding:0;font:inherit;text-decoration:underline">' . htmlspecialchars($label) . '</button>'
+        . '<button type="submit" class="link-btn' . ($danger ? ' link-btn--danger' : '') . '">' . htmlspecialchars($label) . '</button>'
         . '</form>';
 };
 ?>
-<h1><?= htmlspecialchars($vars['pageTitle']) ?></h1>
-<p>
+<header class="index-head">
+    <h1 class="page-title"><?= htmlspecialchars($vars['pageTitle']) ?></h1>
+</header>
+
+<p class="admin-sub">
     <a href="<?= htmlspecialchars($base) ?>"><?= t('admin.dashboard', 'Dashboard') ?></a>
-    &middot;
+    <span class="meta-sep" aria-hidden="true">&middot;</span>
     <a href="<?= htmlspecialchars($base) ?>?action=plugins"><?= t('admin.plugins', 'Plugins') ?></a>
-    &middot;
+    <span class="meta-sep" aria-hidden="true">&middot;</span>
     <a href="<?= htmlspecialchars($base) ?>?action=themes"><?= t('admin.themes', 'Themes') ?></a>
-    &middot;
-    <form method="post" action="<?= htmlspecialchars($base) ?>" style="display:inline">
+    <span class="meta-sep" aria-hidden="true">&middot;</span>
+    <form method="post" action="<?= htmlspecialchars($base) ?>" class="act-form">
         <input type="hidden" name="csrf" value="<?= htmlspecialchars(\Wawoo\Plugin\Admin\Csrf::token(), ENT_QUOTES, 'UTF-8') ?>">
         <input type="hidden" name="action" value="logout">
-        <button type="submit" style="background:none;border:0;color:#0071e3;cursor:pointer;padding:0;font:inherit;text-decoration:underline"><?= t('admin.logout', 'Logout') ?></button>
+        <button type="submit" class="link-btn"><?= t('admin.logout', 'Logout') ?></button>
     </form>
 </p>
 
 <?php if ($action === 'plugins'): ?>
-    <h2><?= t('admin.plugins', 'Plugins') ?></h2>
-    <table style="width:100%;border-collapse:collapse;margin-top:1rem">
+    <h2 class="section-title"><?= t('admin.plugins', 'Plugins') ?></h2>
+    <table class="admin-table">
         <thead>
             <tr>
-                <th style="text-align:left;border-bottom:1px solid #ccc;padding:.5rem"><?= t('admin.name', 'Name') ?></th>
-                <th style="text-align:left;border-bottom:1px solid #ccc;padding:.5rem"><?= t('admin.version', 'Version') ?></th>
-                <th style="text-align:left;border-bottom:1px solid #ccc;padding:.5rem"><?= t('admin.description', 'Description') ?></th>
-                <th style="border-bottom:1px solid #ccc;padding:.5rem"><?= t('admin.status', 'Status') ?></th>
+                <th><?= t('admin.name', 'Name') ?></th>
+                <th><?= t('admin.version', 'Version') ?></th>
+                <th><?= t('admin.description', 'Description') ?></th>
+                <th><?= t('admin.status', 'Status') ?></th>
             </tr>
         </thead>
         <tbody>
@@ -66,12 +69,12 @@ $actForm = function (string $action, string $value, string $label, bool $confirm
                 $enabled = in_array($name, (array)($vars['enabledPlugins'] ?? []), true);
             ?>
             <tr>
-                <td style="padding:.5rem"><?= $name ?></td>
-                <td style="padding:.5rem"><?= $version ?></td>
-                <td style="padding:.5rem"><?= $desc ?></td>
-                <td style="padding:.5rem;text-align:center">
+                <td><?= $name ?></td>
+                <td><?= $version ?></td>
+                <td><?= $desc ?></td>
+                <td class="cell-status">
                     <?php if ($enabled): ?>
-                        <?= $actForm('disable-plugin', (string)($p['name'] ?? ''), t('admin.disable', 'Disable'), false, 'name', '#b00020') ?>
+                        <?= $actForm('disable-plugin', (string)($p['name'] ?? ''), t('admin.disable', 'Disable'), false, 'name', true) ?>
                     <?php else: ?>
                         <?= $actForm('enable-plugin', (string)($p['name'] ?? ''), t('admin.enable', 'Enable'), false, 'name') ?>
                     <?php endif; ?>
@@ -85,14 +88,14 @@ $actForm = function (string $action, string $value, string $label, bool $confirm
     </table>
 
 <?php elseif ($action === 'themes'): ?>
-    <h2><?= t('admin.themes', 'Themes') ?></h2>
-    <table style="width:100%;border-collapse:collapse;margin-top:1rem">
+    <h2 class="section-title"><?= t('admin.themes', 'Themes') ?></h2>
+    <table class="admin-table">
         <thead>
             <tr>
-                <th style="text-align:left;border-bottom:1px solid #ccc;padding:.5rem"><?= t('admin.name', 'Name') ?></th>
-                <th style="text-align:left;border-bottom:1px solid #ccc;padding:.5rem"><?= t('admin.version', 'Version') ?></th>
-                <th style="text-align:left;border-bottom:1px solid #ccc;padding:.5rem"><?= t('admin.description', 'Description') ?></th>
-                <th style="border-bottom:1px solid #ccc;padding:.5rem"><?= t('admin.status', 'Status') ?></th>
+                <th><?= t('admin.name', 'Name') ?></th>
+                <th><?= t('admin.version', 'Version') ?></th>
+                <th><?= t('admin.description', 'Description') ?></th>
+                <th><?= t('admin.status', 'Status') ?></th>
             </tr>
         </thead>
         <tbody>
@@ -104,10 +107,10 @@ $actForm = function (string $action, string $value, string $label, bool $confirm
                 $active = ($name === (string)($vars['activeTheme'] ?? ''));
             ?>
             <tr>
-                <td style="padding:.5rem"><?= $name ?></td>
-                <td style="padding:.5rem"><?= $version ?></td>
-                <td style="padding:.5rem"><?= $desc ?></td>
-                <td style="padding:.5rem;text-align:center">
+                <td><?= $name ?></td>
+                <td><?= $version ?></td>
+                <td><?= $desc ?></td>
+                <td class="cell-status">
                     <?php if ($active): ?>
                         <strong><?= t('admin.active', 'Active') ?></strong>
                     <?php else: ?>
@@ -120,21 +123,21 @@ $actForm = function (string $action, string $value, string $label, bool $confirm
     </table>
 
 <?php else: // dashboard ?>
-    <p>
+    <p class="admin-stat">
         <?= sprintf(t('admin.stats', '<strong>%1$d</strong> posts, <strong>%2$d</strong> categories, <strong>%3$d</strong> tags.'), (int)($stats['post_count'] ?? 0), (int)($stats['category_count'] ?? 0), (int)($stats['tag_count'] ?? 0)) ?>
     </p>
 
     <?php if (empty($posts)): ?>
-        <p><?= t('admin.no_posts', 'No posts yet. Drop a markdown file into <code>posts/</code> to get started.') ?></p>
+        <p class="admin-stat"><?= t('admin.no_posts', 'No posts yet. Drop a markdown file into <code>posts/</code> to get started.') ?></p>
     <?php else: ?>
-    <table style="width:100%;border-collapse:collapse">
+    <table class="admin-table">
         <thead>
             <tr>
-                <th style="text-align:left;border-bottom:1px solid #ccc;padding:.5rem"><?= t('admin.title_col', 'Title') ?></th>
-                <th style="text-align:left;border-bottom:1px solid #ccc;padding:.5rem"><?= t('admin.date', 'Date') ?></th>
-                <th style="text-align:left;border-bottom:1px solid #ccc;padding:.5rem"><?= t('common.category', 'Category') ?></th>
-                <th style="text-align:left;border-bottom:1px solid #ccc;padding:.5rem"><?= t('admin.status', 'Status') ?></th>
-                <th style="border-bottom:1px solid #ccc;padding:.5rem"><?= t('admin.actions', 'Actions') ?></th>
+                <th><?= t('admin.title_col', 'Title') ?></th>
+                <th><?= t('admin.date', 'Date') ?></th>
+                <th><?= t('common.category', 'Category') ?></th>
+                <th><?= t('admin.status', 'Status') ?></th>
+                <th><?= t('admin.actions', 'Actions') ?></th>
             </tr>
         </thead>
         <tbody>
@@ -145,19 +148,19 @@ $actForm = function (string $action, string $value, string $label, bool $confirm
                 default     => (string)($p['status'] ?? ''),
             }; ?>
             <tr>
-                <td style="padding:.5rem">
+                <td>
                     <a href="<?= htmlspecialchars(BASE_URL) ?>post/<?= urlencode($p['slug']) ?>"><?= htmlspecialchars($p['title']) ?></a>
                 </td>
-                <td style="padding:.5rem"><?= htmlspecialchars($p['date']) ?></td>
-                <td style="padding:.5rem"><?= htmlspecialchars($p['category']) ?></td>
-                <td style="padding:.5rem"><?= htmlspecialchars($statusLabel) ?></td>
-                <td style="padding:.5rem;text-align:right">
+                <td><?= htmlspecialchars($p['date']) ?></td>
+                <td><?= htmlspecialchars($p['category']) ?></td>
+                <td class="cell-status"><?= htmlspecialchars($statusLabel) ?></td>
+                <td class="cell-actions">
                     <?php if (($p['status'] ?? '') !== 'published'): ?>
                         <?= $actForm('publish', $p['slug'], t('admin.publish', 'Publish')) ?>
                     <?php endif; ?>
                     <a href="<?= htmlspecialchars($base) ?>?action=schedule&amp;slug=<?= urlencode($p['slug']) ?>"><?= t('admin.schedule', 'Schedule') ?></a>
                     <?= $actForm('toggle', $p['slug'], t('admin.toggle', 'Toggle')) ?>
-                    <?= $actForm('delete', $p['slug'], t('admin.delete', 'Delete'), true) ?>
+                    <?= $actForm('delete', $p['slug'], t('admin.delete', 'Delete'), true, 'slug', true) ?>
                 </td>
             </tr>
         <?php endforeach; ?>

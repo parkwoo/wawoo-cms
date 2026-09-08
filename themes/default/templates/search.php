@@ -14,25 +14,41 @@ if (!function_exists('t')) {
 
 $q     = $vars['q']     ?? '';
 $posts = $vars['posts'] ?? [];
+$fmt   = static fn(string $d): string => ($t = strtotime($d)) ? date('F j, Y', $t) : $d;
 ?>
-<h1><?= t('search.title', 'Search') ?></h1>
-<form method="get" action="<?= htmlspecialchars(BASE_URL) ?>" style="margin-bottom:1.5rem">
-    <input type="search" name="q" value="<?= htmlspecialchars($q) ?>" placeholder="<?= t('search.placeholder', 'Search...') ?>"
-           style="padding:.5rem;width:60%;max-width:400px">
+<header class="index-head">
+    <h1><?= t('search.title', 'Search') ?></h1>
+</header>
+
+<form class="search-form" method="get" action="<?= htmlspecialchars(BASE_URL) ?>" role="search">
+    <input class="search-input" type="search" name="q" value="<?= htmlspecialchars($q) ?>"
+           placeholder="<?= t('search.placeholder', 'Search...') ?>" aria-label="<?= t('search.placeholder', 'Search...') ?>">
+    <button class="btn" type="submit"><?= t('search.submit', 'Search') ?></button>
 </form>
 
 <?php if ($q === ''): ?>
-    <p><?= t('search.no_query', 'Type a query above.') ?></p>
+    <p class="search-intro"><?= t('search.no_query', 'Type a query above.') ?></p>
 <?php elseif (empty($posts)): ?>
-    <p><?= sprintf(t('search.empty', 'No results for <strong>%s</strong>.'), htmlspecialchars($q)) ?></p>
+    <p class="search-intro"><?= sprintf(t('search.empty', 'No results for <strong>%s</strong>.'), htmlspecialchars($q)) ?></p>
 <?php else: ?>
-    <p><?= sprintf(t('search.results', '%1$d result(s) for <strong>%2$s</strong>:'), count($posts), htmlspecialchars($q)) ?></p>
-    <?php foreach ($posts as $post): ?>
-        <article class="post-card">
-            <h2><a href="<?= htmlspecialchars(BASE_URL) ?>post/<?= urlencode($post['slug']) ?>"><?= htmlspecialchars($post['title']) ?></a></h2>
-            <div class="meta"><time><?= htmlspecialchars($post['date']) ?></time></div>
-        </article>
-    <?php endforeach; ?>
+    <p class="search-intro"><?= sprintf(t('search.results', '%1$d result(s) for <strong>%2$s</strong>:'), count($posts), htmlspecialchars($q)) ?></p>
+    <div class="post-list search-results">
+        <?php foreach ($posts as $post): ?>
+            <article class="post-card post-card--plain">
+                <div class="post-card-body">
+                    <p class="meta">
+                        <span><?= htmlspecialchars($post['category']) ?></span>
+                        <span class="meta-sep" aria-hidden="true">&middot;</span>
+                        <time datetime="<?= htmlspecialchars(date('c', strtotime($post['date']))) ?>"><?= htmlspecialchars($fmt($post['date'])) ?></time>
+                    </p>
+                    <h2 class="post-title"><a href="<?= htmlspecialchars(BASE_URL) ?>post/<?= urlencode($post['slug']) ?>"><?= htmlspecialchars($post['title']) ?></a></h2>
+                    <?php if (!empty($post['excerpt'])): ?>
+                        <p class="excerpt"><?= htmlspecialchars($post['excerpt']) ?></p>
+                    <?php endif; ?>
+                </div>
+            </article>
+        <?php endforeach; ?>
+    </div>
 <?php endif; ?>
 
 <?php $__pgnav = \Wawoo\Core\Hook::filter('pagination.render', null, $vars); ?>

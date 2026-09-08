@@ -2,7 +2,6 @@
 /**
  * @var array $vars
  *  pageTitle, pageDescription, structuredType, canonical, ...
- * @var \Wawoo\Core\Theme $theme (via $this)
  */
 use Wawoo\Core\Hook;
 use Wawoo\Core\Posts;
@@ -57,10 +56,12 @@ $canonical      = $meta['canonical'];
     <?php Hook::fire('theme.head.after', $vars); ?>
 </head>
 <body>
+<a class="skip-link" href="#main"><?= t('a11y.skip', 'Skip to content') ?></a>
+<span class="top-anchor" id="wawoo-top" aria-hidden="true"></span>
 <header class="site-header">
     <div class="container">
         <a class="site-brand" href="<?= htmlspecialchars(BASE_URL) ?>"><?= htmlspecialchars(SITE_TITLE) ?></a>
-        <nav class="site-nav">
+        <nav class="site-nav" role="navigation" aria-label="<?= t('nav.label', 'Primary') ?>">
             <?php $__menu = \Wawoo\Core\Hook::filter('theme.nav.items', null, $vars); ?>
             <?php if (is_string($__menu) && $__menu !== ''): ?>
                 <?= $__menu ?>
@@ -77,4 +78,4 @@ $canonical      = $meta['canonical'];
         </nav>
     </div>
 </header>
-<main class="container">
+<main id="main" class="container">

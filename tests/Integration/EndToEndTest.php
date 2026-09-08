@@ -333,7 +333,9 @@ final class EndToEndTest extends TestCase
     {
         [$status, $body] = self::request('GET', '/about');
         $this->assertSame(200, $status);
-        $this->assertStringContainsString('About wawoo-cms', $body);
+        // The template emits the single <h1> (markdown body starts at <h2>).
+        $this->assertMatchesRegularExpression('/<h1[^>]*>About<\/h1>/', $body);
+        $this->assertStringContainsString('rel="canonical" href="http://' . self::$host . ':' . self::$port . '/about"', $body);
         // Images inside the page bundle are served statically.
         [$imgStatus] = self::request('GET', '/pages/about/sample.svg');
         $this->assertSame(200, $imgStatus);
