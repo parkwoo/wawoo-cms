@@ -50,6 +50,19 @@ namespace、入口类与依赖约束。内核按序解析依赖，先启动插�
 - `theme.head` / `theme.head.after` / `theme.footer` — 主题层 hook
 - `index.before_render` / `post.before_render` / `search.before_render`
 
+## 图表示例
+
+wawoo-cms 可用纯文本绘制 Mermaid 图表（可选 `mermaid` 插件会将其渲染为 SVG）：
+
+```mermaid
+flowchart LR
+    A[posts/ 中的 Markdown] --> B[wawoo-cms 内核]
+    B --> C[主题渲染页面]
+    B --> D[插件与 hooks]
+    C --> E[浏览器中的 HTML]
+    D --> E
+```
+
 ## 下一步
 
 - 运行 `php bin/wawoo doctor` 检查环境

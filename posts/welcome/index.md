@@ -54,6 +54,20 @@ The core resolves dependencies in order and boots plugins before themes.
 - `theme.head` / `theme.head.after` / `theme.footer` — theme-level hooks
 - `index.before_render` / `post.before_render` / `search.before_render`
 
+## A small diagram
+
+wawoo-cms renders Mermaid diagrams from plain text (the optional
+`mermaid` plugin turns them into SVG):
+
+```mermaid
+flowchart LR
+    A[Markdown in posts/] --> B[wawoo-cms core]
+    B --> C[Theme renders page]
+    B --> D[Plugins & hooks]
+    C --> E[HTML in the browser]
+    D --> E
+```
+
 ## Next steps
 
 - Run `php bin/wawoo doctor` to check the environment.

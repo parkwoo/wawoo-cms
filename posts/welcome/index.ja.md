@@ -54,6 +54,20 @@ entry クラス、依存制約を持つ JSON マニフェストを同梱しま�
 - `theme.head` / `theme.head.after` / `theme.footer` — テーマレベルのフック
 - `index.before_render` / `post.before_render` / `search.before_render`
 
+## 図の例
+
+wawoo-cms は Mermaid の図をテキストから描画できます（オプションの
+`mermaid` プラグインが SVG に変換します）。
+
+```mermaid
+flowchart LR
+    A[posts/ の Markdown] --> B[wawoo-cms コア]
+    B --> C[テーマがページを描画]
+    B --> D[プラグインとフック]
+    C --> E[ブラウザで HTML]
+    D --> E
+```
+
 ## 次のステップ
 
 - `php bin/wawoo doctor` で環境を確認
