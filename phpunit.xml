@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"
-         bootstrap="tests/bootstrap.php"
+         bootstrap="plugins/translation/tests/bootstrap.php"
          colors="true"
          cacheResultFile=".phpunit.cache/test-results"
          executionOrder="random"
@@ -19,6 +19,9 @@
         <testsuite name="plugin">
             <directory>tests/Plugin</directory>
         </testsuite>
+        <testsuite name="translation">
+            <directory>plugins/translation/tests</directory>
+        </testsuite>
     </testsuites>
     <coverage>
         <include>
@@ -30,4 +33,8 @@
             <text outputFile="tests/coverage.txt"/>
         </report>
     </coverage>
+    <php>
+        <ini name="display_errors" value="1"/>
+        <ini name="error_reporting" value="-1"/>
+    </php>
 </phpunit>
