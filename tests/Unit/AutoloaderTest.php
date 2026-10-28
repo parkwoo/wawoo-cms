@@ -37,7 +37,7 @@ final class AutoloaderTest extends TestCase
         // Restore prior prefixes so other tests keep plugin autoloading.
         $p = new ReflectionProperty(Autoloader::class, 'prefixes');
         $p->setAccessible(true);
-        $p->setValue($this->savedPrefixes);
+        $p->setValue(null, $this->savedPrefixes);
     }
 
     public function testLoadFindsMappedClass(): void
