@@ -10,8 +10,8 @@ class MultiLanguageManager
     private const DEFAULT_AUTO_DETECT = true;
     private const DEFAULT_FALLBACK_LANGUAGE = 'en';
     
-    // サポート言語
-    private const SUPPORTED_LANGUAGES = [
+    // サポート言語（addLanguage/removeLanguage で変更できるよう static プロパティ）
+    private static $supportedLanguages = [
         'ja' => ['name' => 'Japanese', 'locale' => 'ja_JP', 'flag' => '🇯🇵'],
         'en' => ['name' => 'English', 'locale' => 'en_US', 'flag' => '🇺🇸'],
         'zh' => ['name' => 'Chinese', 'locale' => 'zh_CN', 'flag' => '🇨🇳'],
@@ -120,11 +120,11 @@ class MultiLanguageManager
         }
 
         // サポート言語チェック
-        if (!isset(self::SUPPORTED_LANGUAGES[$sourceLanguage])) {
+        if (!isset(self::$supportedLanguages[$sourceLanguage])) {
             throw new \InvalidArgumentException("Unsupported source language: {$sourceLanguage}");
         }
 
-        if (!isset(self::SUPPORTED_LANGUAGES[$targetLanguage])) {
+        if (!isset(self::$supportedLanguages[$targetLanguage])) {
             throw new \InvalidArgumentException("Unsupported target language: {$targetLanguage}");
         }
 
@@ -269,7 +269,7 @@ class MultiLanguageManager
         $html = '<div class="language-switcher">';
         $html .= '<select id="language-select" onchange="switchLanguage(this.value)">';
         
-        foreach (self::SUPPORTED_LANGUAGES as $code => $info) {
+        foreach (self::$supportedLanguages as $code => $info) {
             $selected = $code === $currentLanguage ? 'selected' : '';
             $html .= sprintf(
                 '<option value="%s" %s>%s %s</option>',
@@ -476,7 +476,7 @@ class MultiLanguageManager
      */
     public function getSupportedLanguages(): array
     {
-        return self::SUPPORTED_LANGUAGES;
+        return self::$supportedLanguages;
     }
 
     /**
@@ -487,7 +487,7 @@ class MultiLanguageManager
      */
     public function getLanguageInfo(string $languageCode): ?array
     {
-        return self::SUPPORTED_LANGUAGES[$languageCode] ?? null;
+        return self::$supportedLanguages[$languageCode] ?? null;
     }
 
     /**
@@ -501,11 +501,11 @@ class MultiLanguageManager
      */
     public function addLanguage(string $languageCode, string $languageName, string $locale, string $flag): bool
     {
-        if (isset(self::SUPPORTED_LANGUAGES[$languageCode])) {
+        if (isset(self::$supportedLanguages[$languageCode])) {
             return false;
         }
         
-        self::SUPPORTED_LANGUAGES[$languageCode] = [
+        self::$supportedLanguages[$languageCode] = [
             'name' => $languageName,
             'locale' => $locale,
             'flag' => $flag
@@ -522,11 +522,11 @@ class MultiLanguageManager
      */
     public function removeLanguage(string $languageCode): bool
     {
-        if (!isset(self::SUPPORTED_LANGUAGES[$languageCode])) {
+        if (!isset(self::$supportedLanguages[$languageCode])) {
             return false;
         }
         
-        unset(self::SUPPORTED_LANGUAGES[$languageCode]);
+        unset(self::$supportedLanguages[$languageCode]);
         
         // キャッシュをクリア
         $this->cache->clear();
