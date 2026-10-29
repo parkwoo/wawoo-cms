@@ -44,7 +44,8 @@ final class LangsTest extends TestCase
     public function testAlternationMatchesPrefixes(): void
     {
         $alt = Langs::alternation();
-        $this->assertMatchesRegularExpression('#^(ja|zh)$#', $alt);
+        $this->assertContains('ja', explode('|', $alt));
+        $this->assertContains('zh', explode('|', $alt));
         $this->assertSame(1, preg_match('#^/(' . $alt . ')/post/x$#', '/ja/post/x'));
         $this->assertSame(0, preg_match('#^/(' . $alt . ')/post/x$#', '/fr/post/x'));
     }
