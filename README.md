@@ -369,42 +369,79 @@ Three plugins ship under `plugins/` and are enabled by default:
 items in **`wawoo-cms-marketplace`** (the admin console ships its own theme).
 Backwards-compat note: `admin`/`rss`/`search` used to ship in core.
 
+### The marketplace
+
+[`wawoo-cms-marketplace`](https://github.com/parkwoo/wawoo-cms-marketplace)
+is the public catalog of optional plugins — a curation and distribution repo,
+not a web application:
+
+- `index.json` — machine-readable catalog (name, version, `requires.core`,
+  source, summary).
+- `plugins/<name>/` — the plugins themselves (hosted in the catalog).
+- `bundles/default.json` — a starter set of enabled plugins.
+- `scripts/validate_index.py` — checks that the catalog and the hosted
+  plugins stay consistent.
+
+The CLI resolves the catalog from a sibling `wawoo-cms-marketplace` checkout
+(or pass `--index <path>`):
+
+```bash
+php bin/wawoo plugin:search rss      # search the catalog
+php bin/wawoo plugin:install rss --enable
+php bin/wawoo bundle:install default # install a curated set
+```
+
+See the marketplace
+[README](https://github.com/parkwoo/wawoo-cms-marketplace#readme) for the
+catalog layout and contributing notes.
+
 ### Optional plugins
 
-Everything else is optional: `admin`, `rss`, `search`, `code`, `mermaid`, and
-`translation` live in **`wawoo-cms-marketplace`**; the rest are standalone
-`wawoo-plugin-<name>` repos. Install from the catalog with
-`bin/wawoo plugin:install <name>` (or `plugin:link` a checkout), then enable
-with `bin/wawoo enable <name>` (or add it to `ENABLED_PLUGINS`):
+Every optional plugin is hosted in **`wawoo-cms-marketplace`** — the public
+catalog. (The `wawoo-plugin-*` repos are private upstream development homes;
+install from the marketplace, not from them.) Install with
+`bin/wawoo plugin:install <name>` (or `plugin:link` a marketplace checkout),
+then enable with `bin/wawoo enable <name>` (or add it to `ENABLED_PLUGINS`):
 
-| Plugin | Description | Repository |
-|--------|-------------|------------|
-| `wawoo-plugin-pagination` | Numbered pagination (1 2 3 … with ellipsis) | [parkwoo/wawoo-plugin-pagination](https://github.com/parkwoo/wawoo-plugin-pagination) |
-| `wawoo-plugin-analytics` | Google Analytics injector | [parkwoo/wawoo-plugin-analytics](https://github.com/parkwoo/wawoo-plugin-analytics) |
-| `wawoo-plugin-password-gate` | Site-wide password gate (rate-limited, HMAC cookie) | [parkwoo/wawoo-plugin-password-gate](https://github.com/parkwoo/wawoo-plugin-password-gate) |
-| `wawoo-plugin-maintenance` | Maintenance mode: 503 + `Retry-After` page | [parkwoo/wawoo-plugin-maintenance](https://github.com/parkwoo/wawoo-plugin-maintenance) |
-| `wawoo-plugin-comments` | Comment form + admin moderation queue | [parkwoo/wawoo-plugin-comments](https://github.com/parkwoo/wawoo-plugin-comments) |
-| `wawoo-plugin-tag-cloud` | Font-sized tag cloud on the index | [parkwoo/wawoo-plugin-tag-cloud](https://github.com/parkwoo/wawoo-plugin-tag-cloud) |
-| `wawoo-plugin-sitemap-html` | Human-readable HTML sitemap at `/sitemap-page` | [parkwoo/wawoo-plugin-sitemap-html](https://github.com/parkwoo/wawoo-plugin-sitemap-html) |
-| `wawoo-plugin-i18n` | UI translation (en/ja/zh) via a `t()` template helper | [parkwoo/wawoo-plugin-i18n](https://github.com/parkwoo/wawoo-plugin-i18n) |
-| `wawoo-plugin-mlang` | Multi-language content (`/ja/post/<slug>`, …) | [parkwoo/wawoo-plugin-mlang](https://github.com/parkwoo/wawoo-plugin-mlang) |
-| `wawoo-plugin-admin-totp` | TOTP second factor for `/admin` | [parkwoo/wawoo-plugin-admin-totp](https://github.com/parkwoo/wawoo-plugin-admin-totp) |
-| `wawoo-plugin-publish` | Publish workflow + scheduled publishing | [parkwoo/wawoo-plugin-publish](https://github.com/parkwoo/wawoo-plugin-publish) |
-| `wawoo-plugin-s3` | S3-compatible object storage sync | [parkwoo/wawoo-plugin-s3](https://github.com/parkwoo/wawoo-plugin-s3) |
-| `wawoo-plugin-mermaid` | Renders Mermaid fenced diagrams to SVG | [parkwoo/wawoo-plugin-mermaid](https://github.com/parkwoo/wawoo-plugin-mermaid) |
-| `wawoo-plugin-code` | Code-block language labels, copy button & syntax highlighting | [parkwoo/wawoo-plugin-code](https://github.com/parkwoo/wawoo-plugin-code) |
+| Plugin | Description | In the marketplace |
+|--------|-------------|--------------------|
+| `admin` | Admin console: posts, pages, plugins, themes. | [plugins/admin](https://github.com/parkwoo/wawoo-cms-marketplace/tree/main/plugins/admin) |
+| `admin-totp` | TOTP second factor for the admin console. | [plugins/admin-totp](https://github.com/parkwoo/wawoo-cms-marketplace/tree/main/plugins/admin-totp) |
+| `ads` | AdSense slots in head, index, post and footer. | [plugins/ads](https://github.com/parkwoo/wawoo-cms-marketplace/tree/main/plugins/ads) |
+| `analytics` | Analytics script injection. | [plugins/analytics](https://github.com/parkwoo/wawoo-cms-marketplace/tree/main/plugins/analytics) |
+| `api` | JSON API: token-auth publish + R2/S3 presign (X-Api-Token). | [plugins/api](https://github.com/parkwoo/wawoo-cms-marketplace/tree/main/plugins/api) |
+| `audio-inline` | Inline per-language audio player in the post body. | [plugins/audio-inline](https://github.com/parkwoo/wawoo-cms-marketplace/tree/main/plugins/audio-inline) |
+| `audiometa` | Inject audio metadata into posts/pages. | [plugins/audiometa](https://github.com/parkwoo/wawoo-cms-marketplace/tree/main/plugins/audiometa) |
+| `code` | Syntax highlighting and copy button for code blocks. | [plugins/code](https://github.com/parkwoo/wawoo-cms-marketplace/tree/main/plugins/code) |
+| `comments` | File-based comments with moderation. | [plugins/comments](https://github.com/parkwoo/wawoo-cms-marketplace/tree/main/plugins/comments) |
+| `i18n` | UI string localisation. | [plugins/i18n](https://github.com/parkwoo/wawoo-cms-marketplace/tree/main/plugins/i18n) |
+| `maintenance` | Maintenance mode. | [plugins/maintenance](https://github.com/parkwoo/wawoo-cms-marketplace/tree/main/plugins/maintenance) |
+| `media-player` | YouTube/audio player with host allow-list and vendored Plyr assets. | [plugins/media-player](https://github.com/parkwoo/wawoo-cms-marketplace/tree/main/plugins/media-player) |
+| `mermaid` | Mermaid diagram rendering. | [plugins/mermaid](https://github.com/parkwoo/wawoo-cms-marketplace/tree/main/plugins/mermaid) |
+| `mlang` | Multi-language content handling. | [plugins/mlang](https://github.com/parkwoo/wawoo-cms-marketplace/tree/main/plugins/mlang) |
+| `pagination` | Pagination for post lists. | [plugins/pagination](https://github.com/parkwoo/wawoo-cms-marketplace/tree/main/plugins/pagination) |
+| `password-gate` | Password gate for the whole site. | [plugins/password-gate](https://github.com/parkwoo/wawoo-cms-marketplace/tree/main/plugins/password-gate) |
+| `publish` | Publish states and scheduled publishing. | [plugins/publish](https://github.com/parkwoo/wawoo-cms-marketplace/tree/main/plugins/publish) |
+| `review` | Language-scoped review/moderation console (admin session). | [plugins/review](https://github.com/parkwoo/wawoo-cms-marketplace/tree/main/plugins/review) |
+| `rss` | RSS feed at /rss plus nav and head links. | [plugins/rss](https://github.com/parkwoo/wawoo-cms-marketplace/tree/main/plugins/rss) |
+| `rss-lang` | Per-language RSS feeds (requires mlang). | [plugins/rss-lang](https://github.com/parkwoo/wawoo-cms-marketplace/tree/main/plugins/rss-lang) |
+| `s3` | Mirror media to S3-compatible storage. | [plugins/s3](https://github.com/parkwoo/wawoo-cms-marketplace/tree/main/plugins/s3) |
+| `search` | Search page at /search. | [plugins/search](https://github.com/parkwoo/wawoo-cms-marketplace/tree/main/plugins/search) |
+| `sitemap-html` | HTML sitemap page. | [plugins/sitemap-html](https://github.com/parkwoo/wawoo-cms-marketplace/tree/main/plugins/sitemap-html) |
+| `tag-cloud` | Tag cloud widget. | [plugins/tag-cloud](https://github.com/parkwoo/wawoo-cms-marketplace/tree/main/plugins/tag-cloud) |
+| `translation` | File-based translation with admin panel and ENV-based API key. | [plugins/translation](https://github.com/parkwoo/wawoo-cms-marketplace/tree/main/plugins/translation) |
 
 Install any of them from a wawoo-cms checkout:
 
 ```bash
 cd /path/to
 git clone https://github.com/parkwoo/wawoo-cms
-git clone https://github.com/parkwoo/wawoo-plugin-comments
-git clone https://github.com/parkwoo/wawoo-plugin-s3
+git clone https://github.com/parkwoo/wawoo-cms-marketplace
 
 cd wawoo-cms
-php bin/wawoo plugin:link ../wawoo-plugin-comments           # symlink
-php bin/wawoo plugin:link ../wawoo-plugin-s3 --copy          # copy (Docker)
+php bin/wawoo plugin:install comments --enable                  # from the catalog
+# or link a marketplace checkout directly:
+php bin/wawoo plugin:link ../wawoo-cms-marketplace/plugins/s3 --copy
 ```
 
 Themes: `default` and `clay` both ship in this repo; enable one via
@@ -414,39 +451,21 @@ Docker).
 
 ### Version pinning & updates
 
-Each optional plugin repo (`wawoo-plugin-*`) is versioned independently
-(each tagged at its own version), and its manifest `requires` states the
-core version it is built against (`core >= 1.0.0`). The `clay` theme now
-ships in core.
+Plugins are versioned in their manifest and declare the core version they
+are built against (`requires.core`). The `clay` theme now ships in core.
 
-To pin a deployment, choose a wawoo-cms tag and a matching tag for each
-optional plugin you use, and record the combination. The currently
-published versions are:
+To pin a deployment, pin `wawoo-cms` and `wawoo-cms-marketplace` to tags and
+record the combination. Current versions are listed in the marketplace
+[`index.json`](https://github.com/parkwoo/wawoo-cms-marketplace/blob/main/index.json).
 
-| Repo | Tag |
-|------|-----|
-| wawoo-cms | v1.0.0 |
-| wawoo-plugin-admin-totp | v1.0.0 |
-| wawoo-plugin-analytics | v1.0.0 |
-| wawoo-plugin-code | v1.3.1 |
-| wawoo-plugin-comments | v1.0.0 |
-| wawoo-plugin-i18n | v1.0.0 |
-| wawoo-plugin-maintenance | v1.0.0 |
-| wawoo-plugin-mermaid | v1.1.3 |
-| wawoo-plugin-mlang | v1.0.0 |
-| wawoo-plugin-pagination | v1.0.0 |
-| wawoo-plugin-password-gate | v1.0.0 |
-| wawoo-plugin-publish | v1.0.0 |
-| wawoo-plugin-s3 | v1.0.0 |
-| wawoo-plugin-sitemap-html | v1.0.0 |
-| wawoo-plugin-tag-cloud | v1.0.0 |
 
 When building Docker images, install with `--copy` inside the build so
 the artifact is self-contained — symlinks would dangle once the source
 checkout is gone:
 
 ```bash
-php bin/wawoo plugin:link /path/to/wawoo-plugin-<name> --copy
+php bin/wawoo plugin:install <name>    # hosted items are copied
+# or: php bin/wawoo plugin:link ../wawoo-cms-marketplace/plugins/<name> --copy
 ```
 
 #### Complete pinned install example (core + comments + i18n + s3)
@@ -454,20 +473,18 @@ php bin/wawoo plugin:link /path/to/wawoo-plugin-<name> --copy
 A fully tag-pinned install looks like this:
 
 ```bash
-git clone --branch v1.0.0 https://github.com/parkwoo/wawoo-cms     wawoo-cms
-git clone --branch v1.0.0 https://github.com/parkwoo/wawoo-plugin-comments wawoo-plugin-comments
-git clone --branch v1.0.0 https://github.com/parkwoo/wawoo-plugin-i18n wawoo-plugin-i18n
-git clone --branch v1.0.0 https://github.com/parkwoo/wawoo-plugin-s3 wawoo-plugin-s3
+git clone --branch v2.0.0 https://github.com/parkwoo/wawoo-cms wawoo-cms
+git clone https://github.com/parkwoo/wawoo-cms-marketplace wawoo-cms-marketplace
 
 cd wawoo-cms
-php bin/wawoo plugin:link ../wawoo-plugin-comments --copy
-php bin/wawoo plugin:link ../wawoo-plugin-i18n --copy
-php bin/wawoo plugin:link ../wawoo-plugin-s3 --copy
+php bin/wawoo plugin:link ../wawoo-cms-marketplace/plugins/comments --copy
+php bin/wawoo plugin:link ../wawoo-cms-marketplace/plugins/i18n --copy
+php bin/wawoo plugin:link ../wawoo-cms-marketplace/plugins/s3 --copy
 phpunit
 ```
 
-Every repo above is cloned on its `v1.0.0` tag, so the combination is
-fully repeatable. `--copy` keeps the core checkout self-contained (also
+Pin `wawoo-cms` to a release tag and `wawoo-cms-marketplace` to a tag/commit
+for a repeatable combination. `--copy` keeps the core checkout self-contained (also
 what a Docker build should do). `phpunit` runs the core suite plus the
 linked plugin tests (`tests/Plugin/Comments*Test.php`, `I18n*Test.php`,
 `S3*Test.php`). Note `I18n*Test.php` includes a clay-theme rendering case, and the
