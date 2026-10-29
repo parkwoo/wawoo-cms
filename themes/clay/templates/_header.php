@@ -39,6 +39,7 @@ $canonical      = $meta['canonical'];
     <meta name="description" content="<?= htmlspecialchars($seoDescription) ?>">
     <meta name="robots" content="<?= htmlspecialchars($seoRobots) ?>">
     <link rel="canonical" href="<?= htmlspecialchars($canonical) ?>">
+    <link rel="stylesheet" href="<?= \Wawoo\Core\Theme::asset('css/bulma.min.css') ?>">
     <link rel="stylesheet" href="<?= \Wawoo\Core\Theme::asset('css/style.css') ?>">
     <?php if ($post): ?>
         <meta property="og:type" content="article">
