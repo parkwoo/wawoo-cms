@@ -31,9 +31,9 @@ includes/core/     Bootstrap, Hook, Registry, Manifest, Theme, Autoloader,
                    Frontmatter, Markdown, Posts, Pages, Cache, Url, PluginManager
 includes/Parsedown.php   vendored markdown parser
 posts/  pages/  uploads/  cache/  tests/
-themes/            only `default/` ships here. Other themes (e.g. `clay` =
-                  `wawoo-theme-clay`) are standalone repos linked via
-                  `bin/wawoo theme:link`
+themes/            `default/` and `clay/` ship here; select one with
+                  `ENABLED_THEMES` (or `bin/wawoo theme:use`). Other themes
+                  are linked via `bin/wawoo theme:link`
 plugins/           the three core plugins ship here (`seo`, `menu`,
                   `contact`). Everything else (`admin`, `rss`, `search`,
                   `code`, `mermaid`, `translation`, and the
@@ -45,14 +45,15 @@ plugins/           the three core plugins ship here (`seo`, `menu`,
 
 ## Optional plugins & themes
 
-This repo ships the core only. Optional plugins and the `clay` theme live
-in their own repositories and are linked in before use:
+This repo ships the core. Optional plugins live in their own repositories
+(or in `wawoo-cms-marketplace`) and are linked/in by before use; the
+`clay` theme now ships here:
 
 ```bash
 cd /path/to/wawoo-cms
-php bin/wawoo plugin:link /path/to/wawoo-plugin-comments   # symlink
-php bin/wawoo plugin:link /path/to/wawoo-plugin-s3 --copy # copy (Docker)
-php bin/wawoo theme:link /path/to/wawoo-theme-clay        # themes too
+php bin/wawoo plugin:install comments --enable             # from marketplace
+php bin/wawoo plugin:link /path/to/wawoo-plugin-s3 --copy  # copy (Docker)
+php bin/wawoo theme:use clay                               # select clay
 ```
 
 Once linked they behave exactly like shipped plugins/themes; enable them
@@ -149,8 +150,7 @@ under `tests/Plugin/` and run from within this repo's checkout.
 (`_header.php`, `_footer.php`, `index.php`, `post.php`, `page.php`,
 `search.php`, `404.php`, `admin/dashboard.php`) + `assets/`. Themes are
 declarative display layers; logic goes in plugins. The shipped `default`
-theme and optional themes (e.g. `clay`, linked from `wawoo-theme-clay`
-via `theme:link`) all use the same hook points.
+theme and the `clay` theme (both shipped here) use the same hook points.
 
 ## Settings plugin contract
 

@@ -21,6 +21,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - GitHub Actions CI: PHP 8.2 & 8.3, `php -l`, full core PHPUnit 9.6 suite
   (187 tests) via phar (no composer).
 
+### Themes
+- The `clay` theme now ships in core (`themes/clay/`); the standalone
+  `wawoo-theme-clay` repo is retired.
+
 ### Admin console
 - The `admin` plugin ships its **own self-contained theme**
   (`plugins/admin/theme/`; CSS/JS inlined, no CDN/build) rendered through the

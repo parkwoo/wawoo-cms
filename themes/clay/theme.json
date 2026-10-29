@@ -1,0 +1,17 @@
+{
+    "name": "clay",
+    "type": "theme",
+    "version": "1.0.0",
+    "namespace": "",
+    "entry": "",
+    "requires": {
+        "core": ">=1.0.0"
+    },
+    "hooks": {},
+    "config": {
+        "color_bg": "#FAF5EA",
+        "color_accent": "#A0411D",
+        "color_text": "#2E2923",
+        "font": "system-ui, Georgia, serif"
+    }
+}

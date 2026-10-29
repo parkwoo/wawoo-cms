@@ -44,7 +44,8 @@ wawoo-cms/
 │   ├── Parsedown.php          markdown parser (vendored)
 │   └── core/                  bootstrap, hooks, manifests, autoloader, cache
 ├── themes/
-│   └── default/               GitHub-flavoured light/dark theme
+│   ├── default/               GitHub-flavoured light/dark theme
+│   └── clay/                  Claymorphism theme (ported from hirameki-loto)
 ├── plugins/
 │   ├── seo/                   meta + /sitemap.xml + /robots.txt         [core]
 │   ├── menu/                  navigation menu editor                    [core]
@@ -62,11 +63,11 @@ wawoo-cms/
 └── cache/                     generated cache
 ```
 
-This repo ships the core only. Optional plugins and the `clay` theme are
-separate repositories (`wawoo-plugin-*`, `wawoo-theme-clay`) that are
-installed into `plugins/` / `themes/` with
-`php bin/wawoo plugin:link` / `theme:link` — see the
-[Plugins](#plugins) section.
+This repo ships the core: the `default` and `clay` themes plus the core
+plugins. Optional plugins (the `wawoo-plugin-*` repos, and
+`admin`/`rss`/`search`/`translation` from `wawoo-cms-marketplace`) are
+installed into `plugins/` with `php bin/wawoo plugin:install` /
+`plugin:link` — see the [Plugins](#plugins) section.
 
 ## Quick start
 
@@ -299,11 +300,11 @@ Activate a theme by adding its name to `ENABLED_THEMES` in
 | Theme | Description | Repository |
 |-------|-------------|------------|
 | `default` | GitHub-flavoured light/dark mode styling | Ships in this repo |
-| `clay` | Claymorphism style ported from hirameki-loto's blog module | [parkwoo/wawoo-theme-clay](https://github.com/parkwoo/wawoo-theme-clay) |
+| `clay` | Claymorphism style ported from hirameki-loto's blog module | Ships in this repo |
 
-The `clay` theme lives in its own repository; install it with
-`php bin/wawoo theme:link /path/to/wawoo-theme-clay` (add `--copy` for
-Docker builds) before enabling it in `ENABLED_THEMES`.
+Both themes ship in this repo; select one in `ENABLED_THEMES` (or run
+`php bin/wawoo theme:use <name>`). Other themes can be linked with
+`php bin/wawoo theme:link <repo> [--copy]`.
 
 ### Theme hooks
 
@@ -385,17 +386,17 @@ php bin/wawoo plugin:link ../wawoo-plugin-comments           # symlink
 php bin/wawoo plugin:link ../wawoo-plugin-s3 --copy          # copy (Docker)
 ```
 
-Themes work the same way: `default` ships in this repo, and the `clay`
-theme is installed with
-`php bin/wawoo theme:link /path/to/wawoo-theme-clay` (add `--copy` for
-Docker), then enabled via `ENABLED_THEMES`.
+Themes: `default` and `clay` both ship in this repo; enable one via
+`ENABLED_THEMES` (or `bin/wawoo theme:use <name>`). Additional themes can
+be installed with `php bin/wawoo theme:link <repo>` (add `--copy` for
+Docker).
 
 ### Version pinning & updates
 
-Each optional plugin repo (`wawoo-plugin-*`) and the `clay` theme repo
-(`wawoo-theme-clay`) is versioned independently (each tagged at its own
-version), and its manifest `requires` states the core version it is built
-against (`core >= 1.0.0`).
+Each optional plugin repo (`wawoo-plugin-*`) is versioned independently
+(each tagged at its own version), and its manifest `requires` states the
+core version it is built against (`core >= 1.0.0`). The `clay` theme now
+ships in core.
 
 To pin a deployment, choose a wawoo-cms tag and a matching tag for each
 optional plugin you use, and record the combination. The currently
@@ -418,7 +419,6 @@ published versions are:
 | wawoo-plugin-s3 | v1.0.0 |
 | wawoo-plugin-sitemap-html | v1.0.0 |
 | wawoo-plugin-tag-cloud | v1.0.0 |
-| wawoo-theme-clay | v1.0.0 |
 
 When building Docker images, install with `--copy` inside the build so
 the artifact is self-contained — symlinks would dangle once the source
@@ -428,7 +428,7 @@ checkout is gone:
 php bin/wawoo plugin:link /path/to/wawoo-plugin-<name> --copy
 ```
 
-#### Complete pinned install example (core + comments + i18n + s3 + clay)
+#### Complete pinned install example (core + comments + i18n + s3)
 
 A fully tag-pinned install looks like this:
 
@@ -437,13 +437,11 @@ git clone --branch v1.0.0 https://github.com/parkwoo/wawoo-cms     wawoo-cms
 git clone --branch v1.0.0 https://github.com/parkwoo/wawoo-plugin-comments wawoo-plugin-comments
 git clone --branch v1.0.0 https://github.com/parkwoo/wawoo-plugin-i18n wawoo-plugin-i18n
 git clone --branch v1.0.0 https://github.com/parkwoo/wawoo-plugin-s3 wawoo-plugin-s3
-git clone --branch v1.0.0 https://github.com/parkwoo/wawoo-theme-clay wawoo-theme-clay
 
 cd wawoo-cms
 php bin/wawoo plugin:link ../wawoo-plugin-comments --copy
 php bin/wawoo plugin:link ../wawoo-plugin-i18n --copy
 php bin/wawoo plugin:link ../wawoo-plugin-s3 --copy
-php bin/wawoo theme:link ../wawoo-theme-clay --copy
 phpunit
 ```
 
@@ -451,8 +449,8 @@ Every repo above is cloned on its `v1.0.0` tag, so the combination is
 fully repeatable. `--copy` keeps the core checkout self-contained (also
 what a Docker build should do). `phpunit` runs the core suite plus the
 linked plugin tests (`tests/Plugin/Comments*Test.php`, `I18n*Test.php`,
-`S3*Test.php`). Note `I18n*Test.php` includes a clay-theme rendering case,
-so install `wawoo-theme-clay` too when running the i18n tests.
+`S3*Test.php`). Note `I18n*Test.php` includes a clay-theme rendering case, and the
+`clay` theme now ships in core, so no extra install is needed.
 
 Update & rollback (recommended manual workflow until a lockfile/manager
 exists): before updating a plugin, back up the cache state volume — it
