@@ -4,9 +4,9 @@
         <div>&copy; <?= date('Y') ?> <?= htmlspecialchars(SITE_TITLE) ?>. Powered by <a href="https://github.com/">wawoo-cms</a>.</div>
     </div>
 </footer>
-<script src="<?= \Wawoo\Core\Theme::asset('js/nav.js') ?>" defer></script>
-<script src="<?= \Wawoo\Core\Theme::asset('js/post-images.js') ?>" defer></script>
-<script>
+<script<?= \Wawoo\Core\Csp::attr() ?> src="<?= \Wawoo\Core\Theme::asset('js/nav.js') ?>" defer></script>
+<script<?= \Wawoo\Core\Csp::attr() ?> src="<?= \Wawoo\Core\Theme::asset('js/post-images.js') ?>" defer></script>
+<script<?= \Wawoo\Core\Csp::attr() ?>>
 document.querySelectorAll('pre > code[class*="language-"]').forEach(function (code) {
     var m = (code.className || '').match(/language-([A-Za-z0-9_-]+)/);
     if (m) { code.parentElement.setAttribute('data-lang', m[1]); }

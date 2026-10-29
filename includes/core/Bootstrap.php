@@ -50,7 +50,13 @@ final class Bootstrap
         require_once __DIR__ . '/Url.php';
         require_once __DIR__ . '/Autoloader.php';
         require_once __DIR__ . '/Crypto.php';
+        require_once __DIR__ . '/Csp.php';
         require_once __DIR__ . '/PluginManager.php';
+
+        // Content-Security-Policy with a per-request nonce for inline scripts.
+        if (PHP_SAPI !== 'cli' && !headers_sent()) {
+            header('Content-Security-Policy: ' . Csp::header());
+        }
 
         Autoloader::register();
 

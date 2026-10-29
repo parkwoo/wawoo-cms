@@ -133,7 +133,7 @@ $coverAlt     = (string)($post['meta']['cover_alt'] ?? $post['title']);
     <p class="back-to-top"><a href="#wawoo-top"><?= t('post.back_top', 'Back to top') ?> &uarr;</a></p>
 </footer>
 
-<script>
+<script<?= \Wawoo\Core\Csp::attr() ?>>
 (function () {
     'use strict';
     var body = document.getElementById('post-body');

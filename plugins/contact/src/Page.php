@@ -188,6 +188,7 @@ final class Page
             'privacyRequired'=> $jsEncode($le('error_privacy_required', 'Please accept the privacy policy.')),
         ];
 
+        $cspAttr = \Wawoo\Core\Csp::attr();
         echo <<<HTML
 <!doctype html>
 <html lang="{$lang}">
@@ -316,7 +317,7 @@ body {
         {$aside}
     </div>
 </main>
-<script>
+<script{$cspAttr}>
 (function () {
     'use strict';
     var L = {
