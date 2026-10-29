@@ -78,7 +78,9 @@ final class PublicAssets
             return in_array($ext, self::THEME_EXT, true);
         }
         if (preg_match('#^/uploads/.+$#', $path) === 1) {
-            return in_array($ext, self::PUBLIC_EXT, true);
+            // User-uploaded SVG can carry script; serve it as a download only
+            // (theme-provided and author-authored bundle SVGs stay public).
+            return in_array($ext, self::PUBLIC_EXT, true) && $ext !== 'svg';
         }
         if (preg_match('#^/(posts|pages)/([a-zA-Z0-9_-]+)/[^/]+$#', $path, $m) === 1) {
             if (!in_array($ext, self::PUBLIC_EXT, true)) {

@@ -64,6 +64,8 @@ via `ENABLED_PLUGINS` / `ENABLED_THEMES` in `config.local.php` (or
 
 ```bash
 php bin/wawoo doctor              # confirm environment
+# Local dev: config defaults to APP_ENV=production (host check fails closed),
+# so set define('APP_ENV','development') or ALLOWED_HOSTS in config.local.php.
 php -S 127.0.0.1:8000 router.php  # run the site
 php bin/wawoo list                # see existing posts
 ```

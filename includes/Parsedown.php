@@ -8,8 +8,8 @@
 # (c) Emanuil Rusev
 # http://erusev.com
 #
-# For the full license information, view the LICENSE file that was distributed
-# with this source code.
+# For the full license information see includes/Parsedown-LICENSE.txt (MIT,
+# Copyright (c) 2013-2018 Emanuil Rusev), bundled with this source code.
 #
 #
 

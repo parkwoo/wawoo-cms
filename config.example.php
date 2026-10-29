@@ -14,21 +14,39 @@
 // Production: set BASE_URL to the canonical origin AND list allowed host
 // names in ALLOWED_HOSTS, otherwise the base URL is derived from the Host
 // header and is vulnerable to Host-header poisoning (canonical/SEO abuse).
-// An empty ALLOWED_HOSTS disables the check (development convenience).
+// In production an empty ALLOWED_HOSTS FAILS CLOSED (set APP_ENV to
+// 'development' to allow Host-derived base URLs during local work).
+if (!defined('APP_ENV'))   define('APP_ENV', 'production');
 if (!defined('BASE_PATH')) define('BASE_PATH', '/');
 if (!defined('ALLOWED_HOSTS')) define('ALLOWED_HOSTS', []);
 if (!defined('BASE_URL')) {
     $__proto = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https://' : 'http://';
     $__host  = $_SERVER['HTTP_HOST'] ?? 'localhost';
     $__hostNoPort = preg_replace('/:\d+$/', '', (string)$__host);
-    if (defined('ALLOWED_HOSTS') && is_array(ALLOWED_HOSTS) && ALLOWED_HOSTS !== []) {
+
+    // Reject malformed Host headers outright (defence in depth).
+    if ($__hostNoPort === '' || !preg_match('/^[A-Za-z0-9.-]+$/', $__hostNoPort)) {
+        http_response_code(400);
+        header('Content-Type: text/plain; charset=utf-8');
+        exit('Bad Request');
+    }
+
+    $__allowed = defined('ALLOWED_HOSTS') && is_array(ALLOWED_HOSTS) && ALLOWED_HOSTS !== [];
+    if ($__allowed) {
         $__ok = in_array($__hostNoPort, ALLOWED_HOSTS, true) || in_array($__host, ALLOWED_HOSTS, true);
         if (!$__ok) {
             http_response_code(400);
             header('Content-Type: text/plain; charset=utf-8');
             exit('Host not allowed.');
         }
+    } elseif (APP_ENV === 'production') {
+        // Fail closed: a production site must pin its host(s) to avoid
+        // Host-header poisoning (canonical / sitemap / link abuse).
+        http_response_code(500);
+        header('Content-Type: text/plain; charset=utf-8');
+        exit('Misconfigured: set BASE_URL and ALLOWED_HOSTS in config.local.php, or set APP_ENV to "development" for local use.');
     }
+
     define('BASE_URL', $__proto . $__host . '/');
 }
 

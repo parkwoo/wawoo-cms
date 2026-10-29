@@ -82,14 +82,20 @@ installed into `plugins/` with `php bin/wawoo plugin:install` /
        └── diagram.svg
    ```
 
-3. Serve the directory with PHP's built-in server for a smoke test:
+3. Serve the directory with PHP's built-in server for a smoke test. Copy the
+   config template first; production fails closed on an unset host list, so
+   set `ALLOWED_HOSTS`/`BASE_URL` (or `define('APP_ENV', 'development')` for a
+   local `php -S` run):
 
    ```bash
+   cp config.local.example.php config.local.php
+   define('APP_ENV', 'development');   # local only; keep 'production' in prod
    php -S 127.0.0.1:8000 router.php
    ```
 
-4. For production, point nginx/apache at the directory and route
-   everything through `router.php`, or use Docker:
+4. For production, set `BASE_URL` + `ALLOWED_HOSTS` in `config.local.php`,
+   point nginx/apache at the directory and route everything through
+   `router.php`, or use Docker:
 
    ```bash
    docker compose up -d

@@ -15,9 +15,13 @@ define('AUTHOR_EMAIL',     'you@example.com');
 define('BASE_URL',  'https://blog.example.com/');
 define('BASE_PATH', '/');
 
-// Hosts allowed to reach this site (Host-header poisoning guard). Used when
-// BASE_URL is not hard-coded; keep empty to disable the check (dev only).
+// Hosts allowed to reach this site (Host-header poisoning guard).
+// In production (APP_ENV=production) an empty list FAILS CLOSED, so set it.
 define('ALLOWED_HOSTS', ['blog.example.com']);
+
+// 'production' (default) enforces ALLOWED_HOSTS + fail-closed. Use
+// 'development' for local `php -S` runs where the Host is not pinned.
+define('APP_ENV', 'production');
 
 // Cache
 define('CACHE_ENABLED',  true);
