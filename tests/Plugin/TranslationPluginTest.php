@@ -9,6 +9,9 @@ class TranslationPluginTest extends \PHPUnit\Framework\TestCase
 {
     protected function setUp(): void
     {
+        if (!is_dir(dirname(__DIR__, 2) . '/plugins/translation')) {
+            $this->markTestSkipped('translation plugin is optional (wawoo-cms-marketplace); not installed');
+        }
         // テスト環境の初期化
         $this->clearTestCache();
     }

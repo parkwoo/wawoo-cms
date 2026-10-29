@@ -34,11 +34,13 @@ posts/  pages/  uploads/  cache/  tests/
 themes/            only `default/` ships here. Other themes (e.g. `clay` =
                   `wawoo-theme-clay`) are standalone repos linked via
                   `bin/wawoo theme:link`
-plugins/           the six core plugins ship here (`admin`, `rss`, `search`,
-                  `seo`, `menu`, `contact`). Optional plugins
-                  (`wawoo-plugin-*`, e.g. `/path/to/wawoo-plugin-comments`)
-                  are standalone repos linked via `bin/wawoo plugin:link`
-                  (`--copy` instead of symlink for Docker image builds)
+plugins/           the three core plugins ship here (`seo`, `menu`,
+                  `contact`). Everything else (`admin`, `rss`, `search`,
+                  `code`, `mermaid`, `translation`, and the
+                  `wawoo-plugin-*` repos) is an optional item in
+                  `wawoo-cms-marketplace` (or its own repo), linked via
+                  `bin/wawoo plugin:link` (`--copy` instead of symlink for
+                  Docker image builds)
 ```
 
 ## Optional plugins & themes

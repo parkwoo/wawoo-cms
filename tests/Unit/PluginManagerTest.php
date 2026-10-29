@@ -23,7 +23,7 @@ final class PluginManagerTest extends TestCase
         $root = dirname(__DIR__, 2);
         $plugins = PluginManager::discoverPlugins($root);
         $names = array_column($plugins, 'name');
-        foreach (['seo', 'rss', 'search', 'menu', 'contact', 'admin'] as $expected) {
+        foreach (['seo', 'menu', 'contact'] as $expected) {
             $this->assertContains($expected, $names);
         }
     }

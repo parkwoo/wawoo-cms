@@ -18,10 +18,6 @@
         </testsuite>
         <testsuite name="plugin">
             <directory>tests/Plugin</directory>
-            <!-- WIP: translation plugin tests are known-failing (private ctor calls,
-                 undefined methods, missing curl). Excluded from the default suite
-                 until the plugin is fixed and extracted (see marketplace plan). -->
-            <exclude>tests/Plugin/TranslationPluginTest.php</exclude>
         </testsuite>
     </testsuites>
     <coverage>

@@ -81,7 +81,9 @@ if (!defined('DEBUG'))             define('DEBUG',             false);
 //   wawoo-plugin-admin-totp, wawoo-plugin-mlang,
 //   wawoo-plugin-publish, wawoo-plugin-s3,
 //   wawoo-plugin-mermaid
-if (!defined('ENABLED_PLUGINS'))   define('ENABLED_PLUGINS',   ['admin', 'rss', 'search', 'seo', 'menu', 'contact']);
+// Core ships only contact/menu/seo; admin/rss/search (+ code, mermaid,
+// translation) are optional items in wawoo-cms-marketplace.
+if (!defined('ENABLED_PLUGINS'))   define('ENABLED_PLUGINS',   ['seo', 'menu', 'contact']);
 if (!defined('ENABLED_THEMES'))    define('ENABLED_THEMES',    ['default']);
 
 // Security headers (light defaults; tighten in config.local.php for production)

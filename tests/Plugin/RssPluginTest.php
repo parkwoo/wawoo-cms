@@ -9,6 +9,9 @@ final class RssPluginTest extends TestCase
 {
     protected function setUp(): void
     {
+        if (!is_dir(dirname(__DIR__, 2) . '/plugins/rss')) {
+            $this->markTestSkipped('rss plugin is optional (wawoo-cms-marketplace); not installed');
+        }
         $r = new ReflectionProperty(RssConfig::class, 'cache');
         $r->setAccessible(true);
         $r->setValue(null, null);

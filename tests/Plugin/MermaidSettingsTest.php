@@ -9,6 +9,9 @@ final class MermaidSettingsTest extends TestCase
 {
     protected function setUp(): void
     {
+        if (!is_dir(dirname(__DIR__, 2) . '/plugins/mermaid')) {
+            $this->markTestSkipped('mermaid plugin is optional (wawoo-plugin-mermaid); not installed');
+        }
         $this->resetConfig();
         @unlink(CACHE_DIR . 'settings/mermaid.json');
     }

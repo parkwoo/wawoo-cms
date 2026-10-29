@@ -46,12 +46,13 @@ wawoo-cms/
 ├── themes/
 │   └── default/               GitHub-flavoured light/dark theme
 ├── plugins/
-│   ├── admin/                 /admin console (posts, plugins, themes)  [core]
-│   ├── rss/                   /rss feed + nav/head links               [core]
-│   ├── search/                /search page                              [core]
 │   ├── seo/                   meta + /sitemap.xml + /robots.txt         [core]
 │   ├── menu/                  navigation menu editor                    [core]
 │   └── contact/               /contact inquiry form (CSRF + inbox)      [core]
+│                              (admin, rss, search, code, mermaid,
+│                               translation, ... live in
+│                               wawoo-cms-marketplace and are linked in
+│                               with bin/wawoo plugin:link)
 ├── tests/                     PHPUnit suite (176 tests)
 ├── Dockerfile                 PHP 8.3 Apache, opcache tuned
 ├── docker-compose.yml         development compose

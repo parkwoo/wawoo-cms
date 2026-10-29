@@ -204,6 +204,14 @@ final class EndToEndTest extends TestCase
         return $out;
     }
 
+    /** Skip when an optional plugin (wawoo-cms-marketplace) is not installed. */
+    private function requirePlugin(string $name): void
+    {
+        if (!is_dir(dirname(__DIR__, 2) . '/plugins/' . $name)) {
+            $this->markTestSkipped($name . ' plugin is optional (wawoo-cms-marketplace); not installed');
+        }
+    }
+
     public function testHomepageListsPublishedPosts(): void
     {
         [$status, $body] = self::request('GET', '/');
@@ -280,6 +288,7 @@ final class EndToEndTest extends TestCase
 
     public function testSearchReturnsHits(): void
     {
+        $this->requirePlugin('search');
         [$status, $body] = self::request('GET', '/search?q=world');
         $this->assertSame(200, $status);
         $this->assertStringContainsString('Welcome E2E', $body);
@@ -287,6 +296,7 @@ final class EndToEndTest extends TestCase
 
     public function testRssUsesPrettyPostUrls(): void
     {
+        $this->requirePlugin('rss');
         [$status, $body, $headers] = self::request('GET', '/rss');
         $this->assertSame(200, $status);
         $this->assertStringContainsString('<?xml', $body);
@@ -343,6 +353,7 @@ final class EndToEndTest extends TestCase
 
     public function testAdminLoginFlow(): void
     {
+        $this->requirePlugin('admin');
         [$status, $body, $h] = self::request('GET', '/admin/');
         $this->assertSame(200, $status);
         $this->assertStringContainsString('Admin login', $body);
@@ -368,6 +379,7 @@ final class EndToEndTest extends TestCase
 
     public function testAdminLogoutRequiresPostAndCsrf(): void
     {
+        $this->requirePlugin('admin');
         [$cookies] = $this->loginAdmin();
         // GET logout is refused.
         [$status] = self::request('GET', '/admin/?action=logout', $cookies);
@@ -386,6 +398,7 @@ final class EndToEndTest extends TestCase
 
     public function testAdminLoginRegeneratesSessionId(): void
     {
+        $this->requirePlugin('admin');
         // Anonymous GET issues one session id; a successful login must
         // issue a DIFFERENT id (session fixation defence).
         $before = $this->sessionIdAfterGet();
@@ -399,6 +412,7 @@ final class EndToEndTest extends TestCase
 
     public function testAdminDestructiveActionsRequirePostAndCsrf(): void
     {
+        $this->requirePlugin('admin');
         [$cookies] = $this->loginAdmin();
 
         // GET delete must be refused (403) — never state-changing via GET.
@@ -419,6 +433,7 @@ final class EndToEndTest extends TestCase
 
     public function testPluginSettingsRequireCsrfOnPost(): void
     {
+        $this->requirePlugin('admin');
         [$cookies] = $this->loginAdmin();
         // Settings GET page renders (contains the hidden csrf field).
         [$status, $body] = self::request('GET', '/admin/?action=settings&plugin=menu', $cookies);
