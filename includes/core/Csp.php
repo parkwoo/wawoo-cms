@@ -36,10 +36,18 @@ final class Csp
 
     public static function header(): string
     {
+        // Non-script resources may be pulled over https (plugins load CDN CSS,
+        // fonts, and send analytics beacons). Scripts stay locked to the nonce
+        // + 'strict-dynamic'. Tighten or extend per site via the CSP_EXTRA
+        // constant in config.local.php.
+        $extra = defined('CSP_EXTRA') && is_string(CSP_EXTRA) && CSP_EXTRA !== ''
+            ? ' ' . trim(CSP_EXTRA)
+            : '';
         return "default-src 'self'; "
             . "base-uri 'self'; object-src 'none'; frame-ancestors 'self'; "
-            . "img-src 'self' data:; font-src 'self' data:; "
-            . "style-src 'self' 'unsafe-inline'; "
-            . "script-src 'self' 'nonce-" . self::nonce() . "' 'strict-dynamic'";
+            . "img-src 'self' data: https:; font-src 'self' data: https:; "
+            . "style-src 'self' 'unsafe-inline' https:; "
+            . "connect-src 'self' https:; "
+            . "script-src 'self' 'nonce-" . self::nonce() . "' 'strict-dynamic'" . $extra;
     }
 }
