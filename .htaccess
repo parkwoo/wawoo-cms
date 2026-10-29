@@ -10,7 +10,9 @@ RewriteEngine On
     RewriteRule ^themes/.*\.php$ - [F,L]
     RewriteRule ^\.git(/|$) - [F,L]
     RewriteRule ^(config\.local\.php|\.env|composer\.(json|lock)|README\.md|CHANGELOG\.md|VERSION)$ - [F,L]
-    RewriteRule \.(md|markdown|json|phtml|log|lock|sql|sh)$ - [F,L]
+    RewriteRule ^(bin|tests|docs)/ - [F,L]
+    RewriteRule ^(Dockerfile|docker-compose[^/]*\.ya?ml|phpunit\.xml|\.dockerignore|\.gitignore|LICENSE|CONTRIBUTING\.md)$ - [F,L]
+    RewriteRule \.(md|markdown|json|phtml|log|lock|sql|sh|ya?ml|example)$ - [F,L]
 </IfModule>
 
 # Block direct access to sensitive files. NOTE: front controllers

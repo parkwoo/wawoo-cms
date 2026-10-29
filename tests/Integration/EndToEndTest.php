@@ -358,8 +358,12 @@ final class EndToEndTest extends TestCase
         $this->assertSame(200, $status);
         $this->assertStringContainsString('Admin login', $body);
         $cookies = self::extractCookies($h);
+        $loginCsrf = '';
+        if (preg_match('/name="csrf" value="([^"]+)"/', $body, $m)) {
+            $loginCsrf = $m[1];
+        }
 
-        [$status2, $body2, $h2] = self::request('POST', '/admin/', $cookies, ['pw' => 'e2e-admin-pass']);
+        [$status2, $body2, $h2] = self::request('POST', '/admin/', $cookies, ['pw' => 'e2e-admin-pass', 'csrf' => $loginCsrf]);
         $cookies2 = self::extractCookies($h2);
         // Follow the 303 to the dashboard.
         if (in_array($status2, [301, 302, 303], true)) {
@@ -402,8 +406,15 @@ final class EndToEndTest extends TestCase
         // Anonymous GET issues one session id; a successful login must
         // issue a DIFFERENT id (session fixation defence).
         $before = $this->sessionIdAfterGet();
-        [$s, $b, $h] = self::request('POST', '/admin/', [], ['pw' => 'e2e-admin-pass']);
-        $after = $this->sessionIdFromHeaders($h);
+        // Fetch the login form to obtain the CSRF token + session cookie.
+        [, $gb, $gh] = self::request('GET', '/admin/');
+        $cookies = self::extractCookies($gh);
+        $loginCsrf = '';
+        if (preg_match('/name="csrf" value="([^"]+)"/', $gb, $m)) {
+            $loginCsrf = $m[1];
+        }
+        [$s, $b, $h] = self::request('POST', '/admin/', $cookies, ['pw' => 'e2e-admin-pass', 'csrf' => $loginCsrf]);
+        $after = self::sessionIdFromHeaders($h);
         $this->assertSame(200, $s);
         $this->assertNotSame('', $before);
         $this->assertNotSame('', $after);
@@ -449,7 +460,11 @@ final class EndToEndTest extends TestCase
     {
         [$status, $body, $h] = self::request('GET', '/admin/');
         $cookies = self::extractCookies($h);
-        [$s2, $b2, $h2] = self::request('POST', '/admin/', $cookies, ['pw' => 'e2e-admin-pass']);
+        $loginCsrf = '';
+        if (preg_match('/name="csrf" value="([^"]+)"/', $body, $m)) {
+            $loginCsrf = $m[1];
+        }
+        [$s2, $b2, $h2] = self::request('POST', '/admin/', $cookies, ['pw' => 'e2e-admin-pass', 'csrf' => $loginCsrf]);
         $cookies2 = self::extractCookies($h2);
         if (in_array($s2, [301, 302, 303], true)) {
             foreach ($h2 as $hh) {

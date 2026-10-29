@@ -114,8 +114,14 @@ final class Pages
         $parsed = Frontmatter::parse((string)file_get_contents($file));
         $base   = self::assetBase($slug);
         $cover  = (string)($parsed['meta']['cover'] ?? '');
-        if ($cover !== '' && $base !== '' && !preg_match('#^(?:[a-z][a-z0-9+.-]*:|//|/|data:)#i', $cover)) {
-            $cover = $base . $cover;
+        if ($cover !== '') {
+            if (preg_match('#^https?://#i', $cover) || str_starts_with($cover, '//') || str_starts_with($cover, '/')) {
+                // absolute http(s) or root-relative: keep
+            } elseif (preg_match('#^[a-z][a-z0-9+.-]*:#i', $cover)) {
+                $cover = ''; // reject unsafe schemes (javascript:, data:, ...)
+            } elseif ($base !== '') {
+                $cover = $base . $cover;
+            }
         }
         $langUsed = '';
         if (preg_match('/^index\.([a-zA-Z0-9_-]+)\.md$/', basename($file), $m)) {

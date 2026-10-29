@@ -72,6 +72,12 @@ final class Page
             $this->render($cfg, $values, [$error], false);
             return;
         }
+        // Rotate the session id and CSRF token after a successful submit
+        // (mitigates session fixation and token reuse).
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            session_regenerate_id(true);
+        }
+        unset($_SESSION['wawoo_contact_csrf']);
         $this->render($cfg, [], [], true);
     }
 

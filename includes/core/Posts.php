@@ -262,8 +262,14 @@ final class Posts
         }
         $assetBase = self::assetBase($slug);
         $cover = (string)($parsed['meta']['cover'] ?? '');
-        if ($cover !== '' && $assetBase !== '' && !preg_match('#^(?:[a-z][a-z0-9+.-]*:|//|/|data:)#i', $cover)) {
-            $cover = $assetBase . $cover;
+        if ($cover !== '') {
+            if (preg_match('#^https?://#i', $cover) || str_starts_with($cover, '//') || str_starts_with($cover, '/')) {
+                // absolute http(s) or root-relative: keep
+            } elseif (preg_match('#^[a-z][a-z0-9+.-]*:#i', $cover)) {
+                $cover = ''; // reject unsafe schemes (javascript:, data:, ...)
+            } elseif ($assetBase !== '') {
+                $cover = $assetBase . $cover;
+            }
         }
         $langUsed = '';
         if (preg_match('/^index\.([a-zA-Z0-9_-]+)\.md$/', basename($file), $m)) {

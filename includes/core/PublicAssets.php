@@ -80,8 +80,26 @@ final class PublicAssets
         if (preg_match('#^/uploads/.+$#', $path) === 1) {
             return in_array($ext, self::PUBLIC_EXT, true);
         }
-        if (preg_match('#^/(?:posts|pages)/[a-zA-Z0-9_-]+/[^/]+$#', $path) === 1) {
-            return in_array($ext, self::PUBLIC_EXT, true);
+        if (preg_match('#^/(posts|pages)/([a-zA-Z0-9_-]+)/[^/]+$#', $path, $m) === 1) {
+            if (!in_array($ext, self::PUBLIC_EXT, true)) {
+                return false;
+            }
+            return !self::bundleIsDraft($root, $m[1], $m[2]);
+        }
+        return false;
+    }
+
+    /** True when a post/page bundle's markdown marks it non-published. */
+    private static function bundleIsDraft(string $root, string $dir, string $slug): bool
+    {
+        $files = glob(rtrim($root, '/') . '/' . $dir . '/' . $slug . '/index*.md') ?: [];
+        foreach ($files as $file) {
+            $raw = (string)@file_get_contents($file);
+            if (preg_match('/^---\s*\n(.*?)\n---/s', $raw, $fm)
+                && preg_match('/^\s*status\s*:\s*["\']?([A-Za-z_-]+)/mi', $fm[1], $sm)
+                && strtolower($sm[1]) !== 'published') {
+                return true;
+            }
         }
         return false;
     }

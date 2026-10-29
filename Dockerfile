@@ -31,6 +31,8 @@ RUN { \
         echo 'max_execution_time = 30'; \
         echo 'default_charset = "UTF-8"'; \
         echo 'expose_php = Off'; \
+        echo 'display_errors = Off'; \
+        echo 'log_errors = On'; \
         echo 'date.timezone = UTC'; \
         echo 'opcache.enable = 1'; \
         echo 'opcache.memory_consumption = 128'; \
@@ -39,7 +41,7 @@ RUN { \
         echo 'opcache.revalidate_freq = 0'; \
         echo 'session.cookie_httponly = 1'; \
         echo 'session.cookie_samesite = "Lax"'; \
-        echo 'session.cookie_secure = 0'; \
+        echo 'session.cookie_secure = 1'; \
         echo 'session.use_strict_mode = 1'; \
         echo 'session.use_only_cookies = 1'; \
     } > /usr/local/etc/php/conf.d/wawoo.ini
