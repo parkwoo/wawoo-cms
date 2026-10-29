@@ -49,6 +49,9 @@ function usage(): void
         . "  cache:clear                        flush file cache\n"
         . "  plugin:link <path> [--copy]         link an optional plugin repo into plugins/\n"
         . "  theme:link <path> [--copy]          link an optional theme repo into themes/\n"
+        . "  plugin:search <query> [--index F]   search the marketplace index\n"
+        . "  plugin:install <name> [--enable] [--index F] [--dest D]  install a plugin from the marketplace\n"
+        . "  bundle:install <name> [--enable] [--index F] [--dest D]  install a bundle from the marketplace\n"
         . "  plugins                            list plugins (name | version | enabled|disabled)\n"
         . "  themes                             list themes (name | version | active)\n"
         . "  enable <name>                      enable a plugin\n"
@@ -115,6 +118,102 @@ function writeBundle(string $dir, string $slug, string $frontmatter, string $bod
     }
     file_put_contents($file, "---\n" . $frontmatter . "---\n\n" . $body);
     echo "created {$file}\n";
+}
+
+function readIndexFile(string $file): ?array
+{
+    if (!is_file($file)) {
+        return null;
+    }
+    $raw = json_decode((string)file_get_contents($file), true);
+    return (is_array($raw) && isset($raw['items']) && is_array($raw['items'])) ? $raw : null;
+}
+
+function marketIndexPath(array $args, string $root): ?string
+{
+    $explicit = option($args, '--index');
+    if ($explicit !== '') {
+        return $explicit;
+    }
+    $guess = dirname($root) . '/wawoo-cms-marketplace/index.json';
+    return is_file($guess) ? $guess : null;
+}
+
+function copyTree(string $src, string $dst): bool
+{
+    if (!is_dir($src)) {
+        return false;
+    }
+    if (!is_dir($dst) && !@mkdir($dst, 0755, true) && !is_dir($dst)) {
+        return false;
+    }
+    $it = new RecursiveIteratorIterator(
+        new RecursiveDirectoryIterator($src, FilesystemIterator::SKIP_DOTS),
+        RecursiveIteratorIterator::SELF_FIRST
+    );
+    foreach ($it as $item) {
+        $target = $dst . DIRECTORY_SEPARATOR . $it->getSubPathName();
+        if ($item->isDir()) {
+            @mkdir($target, 0755, true);
+        } else {
+            @copy($item->getPathname(), $target);
+        }
+    }
+    return true;
+}
+
+function findIndexItem(array $index, string $name): ?array
+{
+    foreach ($index['items'] as $item) {
+        if (($item['name'] ?? null) === $name) {
+            return $item;
+        }
+    }
+    return null;
+}
+
+function installFromIndex(array $index, string $indexFile, string $name, string $destRoot, bool $enable): string
+{
+    $item = findIndexItem($index, $name);
+    if ($item === null) {
+        return 'error: ' . $name . ' not found in index';
+    }
+    $dest = rtrim($destRoot, '/') . '/' . $name;
+    if (is_dir($dest)) {
+        return 'skip (already installed): ' . $name;
+    }
+    $source = is_array($item['source'] ?? null) ? $item['source'] : [];
+    $kind = (string)($source['kind'] ?? '');
+    if ($kind === 'hosted') {
+        $from = dirname($indexFile) . '/' . ltrim((string)($source['path'] ?? ''), '/');
+        if (!copyTree($from, $dest)) {
+            return 'error: cannot copy hosted item ' . $name . ' from ' . $from;
+        }
+    } elseif ($kind === 'git') {
+        $url = (string)($source['url'] ?? '');
+        if ($url === '') {
+            return 'error: missing git url for ' . $name;
+        }
+        $ref = (string)($source['ref'] ?? '');
+        $cmd = 'git clone --depth 1' . ($ref !== '' ? ' --branch ' . escapeshellarg($ref) : '')
+            . ' ' . escapeshellarg($url) . ' ' . escapeshellarg($dest) . ' 2>&1';
+        $out = [];
+        $code = 0;
+        exec($cmd, $out, $code);
+        if ($code !== 0) {
+            return 'error: git clone failed for ' . $name . ': ' . implode(' ', $out);
+        }
+    } else {
+        return 'error: unknown source kind for ' . $name;
+    }
+    if ($enable) {
+        $enabled = PluginManager::enabledPlugins();
+        if (!in_array($name, $enabled, true)) {
+            $enabled[] = $name;
+            PluginManager::setEnabledPlugins($enabled);
+        }
+    }
+    return 'installed: ' . $name;
 }
 
 switch ($cmd) {
@@ -328,6 +427,72 @@ switch ($cmd) {
             }
         }
         break;
+
+    case 'plugin:search':
+        $idxFile = marketIndexPath($args, $root);
+        $index = $idxFile !== null ? readIndexFile($idxFile) : null;
+        if ($index === null) {
+            fwrite(STDERR, "error: marketplace index.json not found (pass --index <path>)\n");
+            exit(1);
+        }
+        $q = strtolower(trim((string)($args[1] ?? '')));
+        $rows = array_values(array_filter($index['items'], static function ($i) use ($q): bool {
+            if ($q === '') {
+                return true;
+            }
+            $hay = strtolower((string)($i['name'] ?? '') . ' ' . (string)($i['summary'] ?? ''));
+            return strpos($hay, $q) !== false;
+        }));
+        if ($rows === []) {
+            echo "(no matches)\n";
+            break;
+        }
+        usort($rows, static fn($a, $b) => strcmp((string)$a['name'], (string)$b['name']));
+        foreach ($rows as $i) {
+            echo ($i['name'] ?? '?') . ' | ' . ($i['type'] ?? '') . ' | ' . ($i['version'] ?? '')
+                . ' | ' . ($i['source']['kind'] ?? '') . ' | ' . ($i['summary'] ?? '') . "\n";
+        }
+        break;
+
+    case 'plugin:install':
+        $name = trim((string)($args[1] ?? ''));
+        if ($name === '') {
+            fwrite(STDERR, "usage: plugin:install <name> [--enable] [--index F] [--dest D]\n");
+            exit(1);
+        }
+        $idxFile = marketIndexPath($args, $root);
+        $index = $idxFile !== null ? readIndexFile($idxFile) : null;
+        if ($index === null) {
+            fwrite(STDERR, "error: marketplace index.json not found (pass --index <path>)\n");
+            exit(1);
+        }
+        $dest = option($args, '--dest') ?: PLUGINS_DIR;
+        $result = installFromIndex($index, $idxFile, $name, $dest, flag($args, '--enable'));
+        echo $result . "\n";
+        exit(strpos($result, 'error:') === 0 ? 1 : 0);
+
+    case 'bundle:install':
+        $bname = trim((string)($args[1] ?? ''));
+        $idxFile = marketIndexPath($args, $root);
+        $index = $idxFile !== null ? readIndexFile($idxFile) : null;
+        if ($bname === '' || $index === null) {
+            fwrite(STDERR, "usage: bundle:install <name> [--enable] [--index F] [--dest D]\n");
+            exit(1);
+        }
+        $bundleFile = dirname($idxFile) . '/bundles/' . basename($bname) . '.json';
+        $bundle = is_file($bundleFile) ? json_decode((string)file_get_contents($bundleFile), true) : null;
+        if (!is_array($bundle) || !is_array($bundle['plugins'] ?? null)) {
+            fwrite(STDERR, "error: bundle not found: " . $bname . "\n");
+            exit(1);
+        }
+        $dest = option($args, '--dest') ?: PLUGINS_DIR;
+        $fail = false;
+        foreach ($bundle['plugins'] as $n) {
+            $result = installFromIndex($index, $idxFile, (string)$n, $dest, flag($args, '--enable'));
+            echo $result . "\n";
+            $fail = $fail || strpos($result, 'error:') === 0;
+        }
+        exit($fail ? 1 : 0);
 
     case 'plugins':
         $items = PluginManager::discoverPlugins($root);

@@ -1,4 +1,5 @@
 # Example production override.
+# Note: the admin console is an optional plugin (wawoo-cms-marketplace).
 # Copy to docker-compose.override.yml or pass with -f.
 #
 # Root filesystem is read-only, but the CMS admin console (posts publish/

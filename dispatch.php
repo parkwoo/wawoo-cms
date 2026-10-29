@@ -4,7 +4,7 @@
  *
  * Any URL not handled by the core router (index/post/cat/tag/static files)
  * ends up here. Boot fires the `core.request` hook so feature plugins
- * (rss, search, admin, sitemap, ...) can claim the path: each handler
+ * (rss, search, admin, sitemap, ... — all optional plugins) can claim the path: each handler
  * inspects REQUEST_URI, renders its own page and exits. If no plugin
  * claims the request we render the theme's 404 template.
  */

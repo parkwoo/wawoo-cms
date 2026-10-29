@@ -36,7 +36,7 @@ RewriteEngine On
 
 # Pretty URLs — everything goes through the router; the router serves
 # static files, core routes (/post /cat /tag), and delegates plugin pages
-# (rss, search, admin, sitemap, ...) to dispatch.php.
+# (rss, search, admin, sitemap, ... — optional plugins) to dispatch.php.
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule ^post/([a-zA-Z0-9_-]+)/?$ post.php?slug=$1 [L,QSA]

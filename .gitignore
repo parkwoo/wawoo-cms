@@ -16,3 +16,11 @@ tests/coverage.txt
 
 # Plugin runtime data (comments PII, TOTP secrets, rate-limit state)
 plugins/*/data/
+
+# Agent-generated working artifacts (not source)
+overview.md
+overview-*.md
+sensitive-content-check-*.json
+git-status.md
+document-manifest.json
+translation-plugin-test-report.md

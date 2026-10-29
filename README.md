@@ -23,7 +23,7 @@ What makes it agent-friendly:
   don't need, or read the enabled list in one glance from
   `config.local.php`.
 
-**Version:** 1.0.0 · **Tests:** 176 PHPUnit · **PHP files:** 84+ · **Lines:** ~9,400
+**Version:** 2.0.0 · **Tests:** 187 PHPUnit · **PHP files:** 84+ · **Lines:** ~9,400
 
 ## Layout
 
@@ -53,7 +53,7 @@ wawoo-cms/
 │                               translation, ... live in
 │                               wawoo-cms-marketplace and are linked in
 │                               with bin/wawoo plugin:link)
-├── tests/                     PHPUnit suite (176 tests)
+├── tests/                     PHPUnit suite (187 tests)
 ├── Dockerfile                 PHP 8.3 Apache, opcache tuned
 ├── docker-compose.yml         development compose
 ├── docker-compose.dev.yml     writable dev compose (admin-in-container)
@@ -242,10 +242,10 @@ can claim their paths (a plugin page that is disabled returns 404).
 | `/tag/<name>`        | `index.php?tag=<name>` (core)    |
 | `/search`            | `search` plugin                  |
 | `/contact`           | `contact` plugin                 |
-| `/rss`               | `rss` plugin                     |
+| `/rss`               | `rss` plugin (optional)          |
 | `/sitemap.xml`       | `seo` plugin (XML sitemap)       |
 | `/robots.txt`        | `seo` plugin                     |
-| `/admin`             | `admin` plugin                   |
+| `/admin`             | `admin` plugin (optional)        |
 | `/themes/...`        | static asset                     |
 | `/posts/...`         | static asset                     |
 | `/pages/...`         | static asset (page bundle images)|
@@ -335,23 +335,25 @@ Version constraints support: `>=`, `>`, `<=`, `<`, `=`, `!=`, `*`, bare.
 
 ### Core plugins (shipped in this repo)
 
-The six core plugins ship under `plugins/` and are enabled by default:
+Three plugins ship under `plugins/` and are enabled by default:
 
 | Plugin    | Description                                                                  |
 |-----------|------------------------------------------------------------------------------|
-| `admin`   | `/admin` console: session login, post toggle/delete, plugin/theme management, per-plugin Settings |
-| `rss`     | `/rss` feed (RSS 2.0) + nav/head links                                       |
-| `search`  | `/search` full-text page                                                     |
 | `seo`     | Meta trimming + `/sitemap.xml` + `/robots.txt`                               |
-| `menu`    | Navigation menu editor. `/admin → Plugins → menu → Settings` lets you order Home, fixed pages and categories and add custom links; the menu renders via the `theme.nav.items` filter and replaces the theme's default nav only when a menu is saved. |
-| `contact` | `/contact` inquiry form: CSRF, session + IP rate limit, honeypot, configurable labels, inbox archive under `cache/contact/`, optional `mail()` delivery; Settings page under `/admin → Plugins → contact → Settings` |
+| `menu`    | Navigation menu editor. Configure via `bin/wawoo settings:set menu` (or the admin Settings page when the admin plugin is installed); the menu renders via the `theme.nav.items` filter and replaces the theme's default nav only when a menu is saved. |
+| `contact` | `/contact` inquiry form: CSRF, session + IP rate limit, honeypot, configurable labels, inbox archive under `cache/contact/`, optional `mail()` delivery. |
+
+`admin`, `rss`, `search`, `code`, `mermaid`, and `translation` are optional
+items in **`wawoo-cms-marketplace`** (the admin console ships its own theme).
+Backwards-compat note: `admin`/`rss`/`search` used to ship in core.
 
 ### Optional plugins
 
-Everything else is an optional plugin in its own repository. Each lives
-at `wawoo-plugin-<name>` and is linked into this repo's `plugins/` with
-`plugin:link`, then enabled (all OFF by default) in `config.local.php`
-`ENABLED_PLUGINS` or via `/admin → Plugins`:
+Everything else is optional: `admin`, `rss`, `search`, `code`, `mermaid`, and
+`translation` live in **`wawoo-cms-marketplace`**; the rest are standalone
+`wawoo-plugin-<name>` repos. Install from the catalog with
+`bin/wawoo plugin:install <name>` (or `plugin:link` a checkout), then enable
+with `bin/wawoo enable <name>` (or add it to `ENABLED_PLUGINS`):
 
 | Plugin | Description | Repository |
 |--------|-------------|------------|
@@ -619,7 +621,7 @@ directory, so there is no `./vendor/bin/phpunit`); CI downloads PHPUnit
 phpunit
 ```
 
-The suite is 176 tests. A handful of E2E/subprocess tests skip
+The suite is 187 tests. A handful of E2E/subprocess tests skip
 automatically when sockets or curl are unavailable, so the reported
 assertion totals vary between environments. The suite covers:
 

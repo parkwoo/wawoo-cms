@@ -11,7 +11,7 @@
  *
  * Every other URL is delegated to dispatch.php, which fires the
  * `core.request` hook so feature plugins (rss, search, admin, sitemap,
- * password gate, ...) can claim their own paths. If nothing claims the
+ * password gate, ... — optional plugins) can claim their own paths. If nothing claims the
  * request the theme's 404 template is rendered.
  *
  * Place this file at the root of the served sub-path and configure the

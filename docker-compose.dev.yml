@@ -1,4 +1,5 @@
 # Writable dev / admin-in-container variant of wawoo-cms.
+# (The admin console is an optional plugin: install from wawoo-cms-marketplace.)
 #
 # The default docker-compose.yml is read-only host-edit mode: it mounts the
 # content directories with `:ro`, so you edit markdown on the host and

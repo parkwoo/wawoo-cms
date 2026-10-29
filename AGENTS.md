@@ -167,7 +167,7 @@ HTML page and exits. The admin console shows a Settings link automatically
 - Handlers that `exit()` must be exercised via subprocess
   (`PHP_BINARY` + `shell_exec`, see `tests/Plugin/AdminPluginTest.php`)
   or by extracting pure static methods and unit-testing those.
-- Run everything: `phpunit` — the 176-test core suite; a few E2E/
+- Run everything: `phpunit` — the 187-test core suite; a few E2E/
   subprocess tests skip automatically when sockets or curl are
   unavailable, so assertion totals vary. Or run one file:
   `phpunit tests/Unit/MarkdownTest.php`. Optional-plugin tests run the

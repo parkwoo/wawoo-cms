@@ -4,28 +4,28 @@ All notable changes to wawoo-cms are documented here. The format is
 based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [2.0.0] - 2026-10-29
 
 ### Repository split
-- wawoo-cms is now the **core-only monorepo**: core plugins (`admin`,
-  `rss`, `search`, `seo`, `menu`, `contact`) and the `default` theme ship
-  here; all tests target core only (176 PHPUnit tests / 438 assertions).
-- Optional plugins moved to standalone repos
-  `wawoo-plugin-pagination`, `-analytics`, `-password-gate`,
-  `-maintenance`, `-comments`, `-tag-cloud`, `-sitemap-html`, `-i18n`,
-  `-admin-totp`, `-mlang`, `-publish`, `-s3`; the `clay` theme moved to
-  `wawoo-theme-clay`.
-- New CLI: `php bin/wawoo plugin:link <repo> [--copy]` /
-  `theme:link <repo> [--copy]` install a standalone plugin/theme repo
-  into this checkout (symlink by default, `--copy` for Docker images).
-  Plugin manifests/hooks contract is unchanged; optional-plugin tests run
-  from this repo after linking (`phpunit tests/Plugin/<Name>*Test.php`) —
-  `plugin:link` also links the repo's own `tests/Plugin/*.php` into this
-  checkout.
-- `config.example.php` default `ENABLED_PLUGINS` = core set; optional
-  plugins are enabled per site after `plugin:link`.
-- GitHub Actions CI (`.github/workflows/ci.yml`): PHP 8.2 & 8.3, php -l,
-  full core PHPUnit 9.6 suite (176 tests) via phar (no composer).
+- wawoo-cms is now the **core-only** repo: it ships `seo`, `menu`, and
+  `contact` only, plus the `default` theme. Everything else is optional.
+- `admin`, `rss`, `search`, `code`, `mermaid`, and `translation` moved to
+  `wawoo-cms-marketplace` (curated catalog + hosted first-party plugins); the
+  remaining `wawoo-plugin-*` repos and `wawoo-theme-clay` stay standalone and
+  are referenced from the marketplace `index.json`.
+- New CLI: `plugin:search`, `plugin:install`, `bundle:install` (in addition
+  to `plugin:link` / `theme:link`) and `plugins`, `themes`, `enable`,
+  `disable`, `theme:use`, `settings`, `settings:set` — agents can install and
+  manage everything without a UI.
+- `config.example.php` default `ENABLED_PLUGINS` = `seo`, `menu`, `contact`.
+- GitHub Actions CI: PHP 8.2 & 8.3, `php -l`, full core PHPUnit 9.6 suite
+  (187 tests) via phar (no composer).
+
+### Admin console
+- The `admin` plugin ships its **own self-contained theme**
+  (`plugins/admin/theme/`; CSS/JS inlined, no CDN/build) rendered through the
+  new core `Theme::renderFile()`, decoupled from the front-end theme. The
+  front-end `default` theme no longer contains admin templates.
 
 ### Security
 - **Comments & admin-TOTP runtime data moved into `cache/`** (comments →
