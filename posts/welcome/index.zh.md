@@ -6,7 +6,7 @@ tags: [intro, wawoo]
 author: wawoo
 excerpt: 欢迎使用 wawoo-cms — 一个为纯文本爱好者打造的文件型 CMS。这里介绍它是什么、如何运作，以及如何开始。
 status: published
-cover: sample-diagram.svg
+cover: cover.svg
 cover_alt: wawoo-cms 结构：上方为 markdown 文章，中间为核心内核，下方为主题与插件
 cover_caption: wawoo-cms 架构 — posts → core → themes & plugins
 ---

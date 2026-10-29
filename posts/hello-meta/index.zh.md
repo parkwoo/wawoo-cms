@@ -6,7 +6,7 @@ tags: [meta, architecture, plugins]
 author: wawoo
 excerpt: 看看 wawoo-cms 三层插件契约的设计思路：依赖放在 plugin.json、hooks 作为扩展点、运行时配置放在 cache/settings/。
 status: published
-cover: sample-diagram.svg
+cover: cover.svg
 cover_alt: wawoo-cms 结构：上方为 markdown 文章，中间为核心内核，下方为主题与插件
 cover_caption: wawoo-cms 架构 — posts → core → themes & plugins
 ---

@@ -4,86 +4,60 @@ date: 2026-09-08
 category: News
 tags: [intro, wawoo]
 author: wawoo
-excerpt: Welcome to wawoo-cms — a file-based CMS for plain-text lovers. Here is what it is, how it is structured, and where to start.
+excerpt: A file-based CMS for people who think in plain text. No database, no build step — just markdown bundles, a tiny kernel, and plugins that opt in.
 status: published
-cover: sample-diagram.svg
-cover_alt: Layers of a wawoo-cms site: markdown posts on top, core kernel in the middle, themes and plugins underneath
-cover_caption: wawoo-cms architecture — posts → core → themes & plugins
+cover: cover.svg
+cover_alt: Layered paper sheets representing markdown content, the kernel and extensions
+cover_caption: Content is just folders and files — the kernel stays small, and everything else is a plugin.
 ---
 
-Hello and welcome! 👋
+You are reading a site powered by **wawoo-cms** — a lightweight, file-based CMS
+built for people who like to *think in plain text*. There is no database and no
+build step: a post is a folder, an image lives next to it, and the whole thing
+runs on PHP 8.3.
 
-You are looking at a site powered by **wawoo-cms**, a lightweight, file-based
-CMS for people who like to *think in plain text*. No database, no build step,
-no framework — just markdown bundles, PHP 8.3, and a small hook system.
+## Why file-based?
 
-## What this is
+Because content should outlive the tooling. Markdown bundles are portable,
+diffable, and reviewable in a pull request — the same workflow you already use
+for code.
 
-wawoo-cms stores content as markdown files on disk. Each post lives in
-`posts/<slug>/index.md`; images can sit next to the markdown in the same
-folder. The core handles routing, frontmatter, markdown rendering and cache.
-Everything else — navigation, RSS, search, contact forms — is an opt-in
-plugin.
+> “The best content model is one you can read in a text editor and review like a
+> code change.”
 
-## What's inside
+| You get | You avoid |
+| --- | --- |
+| Markdown + frontmatter on disk | A database to migrate |
+| A tiny hook/plugin kernel | A monolithic framework |
+| Themes and plugins as repos | A vendor lock-in |
 
-- `includes/core/` — bootstrap, hooks, autoloader, frontmatter, markdown,
-  cache, posts/pages loader
-- `themes/<name>/` — templates, CSS and optional JS
-- `plugins/<name>/` — optional features declared in `plugin.json`
-- `posts/<slug>/index.md` — your content bundles
+## It runs on a very small kernel
 
-## Boundaries
-
-- Optimised for text-first blogs and small sites; not a page builder.
-- Requires PHP 8.3+ at runtime; content itself is plain markdown.
-- Large media libraries are better served by object storage (see the `s3`
-  plugin) than by the repo.
-
-## Themes & plugins
-
-Themes and plugins are first-class citizens. Each ships a JSON manifest with
-name, version, namespace, entry class and dependency constraints. The core
-resolves dependencies in order and boots plugins before themes.
-
-## Hooks
-
-- `core.boot` — fires after plugins and themes are loaded
-- `post.load` — fires when a post is read from disk
-- `post.html` — filter on rendered post HTML
-- `theme.head` / `theme.head.after` / `theme.footer` — theme-level hooks
-- `index.before_render` / `post.before_render` / `search.before_render`
-
-## A small diagram
-
-Mermaid diagrams render from plain text into SVG. No extra tooling required:
-
-```mermaid
-flowchart LR
-    A[Markdown in posts/] --> B[wawoo-cms core]
-    B --> C[Theme renders page]
-    B --> D[Plugins & hooks]
-    C --> E[HTML in the browser]
-    D --> E
-```
-
-## Code example
-
-Fenced code blocks get syntax highlighting and horizontal scroll automatically:
+Everything beyond routing, frontmatter, markdown and caching is opt-in. That
+keeps the surface tiny — and easy for both humans and agents to reason about.
 
 ```php
-<?php
-foreach (\Wawoo\Core\Posts::all() as $i => $post) {
-    if ($i >= 3) { break; }
-    echo $post['title'] . "\n";
-}
+// A post is literally a folder with an index.md
+posts/
+└── welcome/
+    ├── index.md      ← frontmatter + markdown
+    └── cover.svg     ← assets live beside the content
 ```
 
-## Getting started
+## Themes and plugins are first-class
 
-1. Run `php bin/wawoo doctor` to check your environment.
-2. Create a post: `php bin/wawoo post:new hello-world --title "Hello, world"`
-3. Open `http://127.0.0.1:8801/post/hello-world` and enjoy. 🎉
+Each theme and plugin ships a small JSON manifest with a name, version and
+namespace. The kernel resolves dependencies, boots plugins first, then the
+theme — so extensions can shape what the theme renders.
 
-Thanks for stopping by — **may your pages load fast and your markdown be
-well-formed.**
+1. **Themes** own the look (`themes/<name>/`).
+2. **Plugins** own the features (`plugins/<name>/`).
+3. **Content** stays plain markdown (`posts/`, `pages/`).
+
+![The layered architecture: content on top, kernel in the middle, extensions below](cover.svg "Content → kernel → themes & plugins")
+
+## Where to start
+
+- Read [the architecture note](/post/hello-meta) for the plugin contract.
+- Browse the archive, or try a search.
+- Everything here is markdown — open the source and edit it.

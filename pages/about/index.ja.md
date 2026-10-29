@@ -2,7 +2,7 @@
 title: このサイトについて
 excerpt: wawoo-cms とは何か、誰が作っているか、このサイトで扱う内容。
 order: 10
-cover: sample.svg
+cover: cover.svg
 cover_alt: posts・core・plugins の階層を示す図
 cover_caption: wawoo-cms — posts・core・plugins
 author: wawoo

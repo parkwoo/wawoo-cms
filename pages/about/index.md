@@ -1,41 +1,43 @@
 ---
 title: About
-excerpt: What wawoo-cms is, who builds it, and what this site covers.
+excerpt: What wawoo-cms is, the principles behind it, and how far the kernel goes before you reach for a plugin.
 order: 10
-cover: sample.svg
-cover_alt: Layered diagram of posts, core and plugins in wawoo-cms
-cover_caption: wawoo-cms — posts, core and plugins
+cover: cover.svg
+cover_alt: Concentric rings forming a minimal site mark
+cover_caption: A small kernel, extended outward by themes and plugins.
 author: wawoo
 ---
 
-## What this is
+## A CMS you can read
 
-wawoo-cms is a **file-based CMS designed for AI agents**: plain PHP 8.3,
-markdown content and a small hook/plugin system. This site is its own
-dogfood — posts and pages are markdown bundles in this repository.
+wawoo-cms is a **file-based CMS designed to be driven by AI agents and plain-text
+lovers**. Content is markdown on disk, the runtime is plain PHP 8.3, and the
+extension surface is a small, documented set of hooks.
 
-## Who writes here
+This site is its own dogfood: every article and page is a folder in this
+repository, reviewed like code.
 
-Built and maintained by the wawoo team. Articles cover the CMS itself,
-AI-agent workflows, PHP and developer tooling. We write in English,
-Japanese and Chinese; every article keeps its translations equivalent in
-substance, not just in title.
+## The three layers
 
-## What you will find
+| Layer | Lives in | Responsibility |
+| --- | --- | --- |
+| Content | `posts/`, `pages/` | Markdown bundles + assets |
+| Kernel | `includes/core/` | Routing, frontmatter, markdown, cache, hooks |
+| Extensions | `themes/`, `plugins/` | Look and optional features |
 
-- Product updates and architecture notes (category: Meta)
-- AI and developer content (see the post archive)
-- Fixed pages like this one under `pages/<slug>/`
+## Principles
 
-## How to reach us
+- **Small core.** If a feature is optional, it is a plugin — not the kernel.
+- **Plain files.** No database, no build step; everything is diffable.
+- **Agent-friendly.** Clear contracts, machine-readable manifests, CLI tooling.
+- **Opt-in complexity.** Start with markdown; add search, feeds or comments
+  only when the site needs them.
 
-- Email: hello@cms.wawoo.jp
-- Issues / source: https://github.com/parkwoo/wawoo-cms
-- Feedback on an article: use the contact form on the site
+## Extend it
 
-## Site policy
+Themes and plugins are repositories with a JSON manifest. A plugin declares its
+dependencies, binds to hooks, and keeps runtime config in `cache/settings/`.
+That is the whole contract.
 
-- Posts are drafts until a human publishes them; corrections are noted in
-  the git history.
-- Comments and inquiries are stored on the cache volume and are never
-  shared.
+Want to see it in practice? Read [the architecture note](/post/hello-meta), or
+browse the archive.

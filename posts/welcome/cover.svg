@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" role="img" aria-label="Layered paper sheets on a soft green field">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#eef3f1"/>
+      <stop offset="1" stop-color="#dbe7e1"/>
+    </linearGradient>
+    <linearGradient id="acc" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#2f4a40"/>
+      <stop offset="1" stop-color="#6fae9b"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="675" fill="url(#bg)"/>
+  <circle cx="980" cy="140" r="190" fill="#ffffff" opacity="0.45"/>
+  <circle cx="1080" cy="560" r="150" fill="#3b5d50" opacity="0.08"/>
+  <g>
+    <rect x="170" y="150" width="860" height="380" rx="30" fill="#ffffff" opacity="0.55"/>
+    <rect x="215" y="120" width="860" height="380" rx="30" fill="#ffffff" opacity="0.8"/>
+    <rect x="260" y="90" width="860" height="380" rx="30" fill="#ffffff" opacity="0.96"/>
+    <rect x="310" y="150" width="280" height="22" rx="11" fill="url(#acc)"/>
+    <rect x="310" y="196" width="560" height="13" rx="6.5" fill="#c7d5ce"/>
+    <rect x="310" y="224" width="500" height="13" rx="6.5" fill="#d5e0da"/>
+    <rect x="310" y="252" width="430" height="13" rx="6.5" fill="#dde6e1"/>
+    <rect x="310" y="316" width="170" height="46" rx="23" fill="url(#acc)"/>
+    <rect x="500" y="316" width="120" height="46" rx="23" fill="#e4ece8"/>
+  </g>
+</svg>

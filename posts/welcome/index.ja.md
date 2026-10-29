@@ -6,7 +6,7 @@ tags: [intro, wawoo]
 author: wawoo
 excerpt: wawoo-cms へようこそ — プレーンテキストを愛する人のためのファイルベース CMS。ここではそれが何か、どのように動作するか、そして始める方法を説明します。
 status: published
-cover: sample-diagram.svg
+cover: cover.svg
 cover_alt: wawoo-cms の構成 — 上に markdown の記事、中央にコア、下にテーマとプラグイン
 cover_caption: wawoo-cms アーキテクチャ — posts → core → themes & plugins
 ---

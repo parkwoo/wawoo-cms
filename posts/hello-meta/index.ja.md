@@ -6,7 +6,7 @@ tags: [meta, architecture, plugins]
 author: wawoo
 excerpt: wawoo-cms の 3 層プラグイン契約の背景にある設計思想：依存関係は plugin.json、フックは拡張点、ランタイム設定は cache/settings/ に。
 status: published
-cover: sample-diagram.svg
+cover: cover.svg
 cover_alt: wawoo-cms の構成 — 上に markdown の記事、中央にコア、下にテーマとプラグイン
 cover_caption: wawoo-cms アーキテクチャ — posts → core → themes & plugins
 ---

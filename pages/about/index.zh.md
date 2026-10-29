@@ -2,7 +2,7 @@
 title: 关于本站
 excerpt: wawoo-cms 是什么、谁在维护、本站覆盖哪些内容。
 order: 10
-cover: sample.svg
+cover: cover.svg
 cover_alt: 展示 posts、core、plugins 层次关系的示意图
 cover_caption: wawoo-cms — posts、core、plugins
 author: wawoo

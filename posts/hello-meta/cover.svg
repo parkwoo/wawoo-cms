@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" role="img" aria-label="A graph of connected plugin hooks">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f3f1ec"/>
+      <stop offset="1" stop-color="#e6e1d6"/>
+    </linearGradient>
+    <linearGradient id="acc" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#8a4a2f"/>
+      <stop offset="1" stop-color="#c98a63"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="675" fill="url(#bg)"/>
+  <g stroke="url(#acc)" stroke-width="4" opacity="0.55" fill="none">
+    <path d="M600 337 L330 200"/><path d="M600 337 L880 190"/>
+    <path d="M600 337 L300 470"/><path d="M600 337 L900 480"/>
+    <path d="M600 337 L600 150"/><path d="M600 337 L600 540"/>
+    <path d="M330 200 L300 470"/><path d="M880 190 L900 480"/>
+  </g>
+  <g fill="#8a4a2f">
+    <circle cx="600" cy="337" r="34"/>
+    <circle cx="330" cy="200" r="20"/><circle cx="880" cy="190" r="20"/>
+    <circle cx="300" cy="470" r="20"/><circle cx="900" cy="480" r="20"/>
+    <circle cx="600" cy="150" r="18"/><circle cx="600" cy="540" r="18"/>
+  </g>
+  <g fill="#ffffff" opacity="0.9">
+    <circle cx="600" cy="337" r="12"/>
+  </g>
+</svg>
