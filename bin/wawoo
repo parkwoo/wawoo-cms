@@ -468,6 +468,10 @@ switch ($cmd) {
             exit(1);
         }
         $dest = option($args, '--dest') ?: PLUGINS_DIR;
+        if (str_contains($dest, '..')) {
+            fwrite(STDERR, "error: --dest must not contain '..'\n");
+            exit(1);
+        }
         $result = installFromIndex($index, $idxFile, $name, $dest, flag($args, '--enable'));
         echo $result . "\n";
         exit(strpos($result, 'error:') === 0 ? 1 : 0);
@@ -487,6 +491,10 @@ switch ($cmd) {
             exit(1);
         }
         $dest = option($args, '--dest') ?: PLUGINS_DIR;
+        if (str_contains($dest, '..')) {
+            fwrite(STDERR, "error: --dest must not contain '..'\n");
+            exit(1);
+        }
         $fail = false;
         foreach ($bundle['plugins'] as $n) {
             $result = installFromIndex($index, $idxFile, (string)$n, $dest, flag($args, '--enable'));
