@@ -61,4 +61,23 @@ final class Theme
             include self::path('templates/_footer.php');
         }
     }
+
+    /**
+     * Render a standalone template file by absolute path, independent of the
+     * active front-end theme. Used by plugins that ship their own theme
+     * (e.g. the admin console). The template is responsible for its own
+     * full document (html/head/body); no header/footer wrapping is applied.
+     */
+    public static function renderFile(string $file, array $vars = []): void
+    {
+        if (!is_file($file)) {
+            if (!headers_sent()) {
+                http_response_code(500);
+            }
+            echo 'Template not found: ' . htmlspecialchars(basename($file));
+            return;
+        }
+        extract($vars, EXTR_SKIP);
+        include $file;
+    }
 }

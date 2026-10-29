@@ -30,6 +30,7 @@ require $root . '/includes/core/Bootstrap.php';
 use Wawoo\Core\Cache;
 use Wawoo\Core\Pages;
 use Wawoo\Core\Posts;
+use Wawoo\Core\PluginManager;
 
 $args = array_slice($argv, 1);
 $cmd  = $args[0] ?? 'help';
@@ -48,6 +49,13 @@ function usage(): void
         . "  cache:clear                        flush file cache\n"
         . "  plugin:link <path> [--copy]         link an optional plugin repo into plugins/\n"
         . "  theme:link <path> [--copy]          link an optional theme repo into themes/\n"
+        . "  plugins                            list plugins (name | version | enabled|disabled)\n"
+        . "  themes                             list themes (name | version | active)\n"
+        . "  enable <name>                      enable a plugin\n"
+        . "  disable <name>                     disable a plugin\n"
+        . "  theme:use <name>                   activate a theme\n"
+        . "  settings <plugin>                  print a plugin's runtime settings (JSON)\n"
+        . "  settings:set <plugin> <key> <value>  set a plugin runtime setting\n"
         . "  doctor                             environment self-check\n";
 }
 
@@ -319,6 +327,99 @@ switch ($cmd) {
                 }
             }
         }
+        break;
+
+    case 'plugins':
+        $items = PluginManager::discoverPlugins($root);
+        if ($items === []) {
+            echo "(no plugins)\n";
+            break;
+        }
+        usort($items, static fn($a, $b) => strcmp((string)$a['name'], (string)$b['name']));
+        $enabled = PluginManager::enabledPlugins();
+        foreach ($items as $m) {
+            $state = in_array($m['name'] ?? '', $enabled, true) ? 'enabled' : 'disabled';
+            echo ($m['name'] ?? '?') . ' | ' . ($m['version'] ?? '?') . ' | ' . $state . ' | ' . ($m['_path'] ?? '') . "\n";
+        }
+        break;
+
+    case 'themes':
+        $items = PluginManager::discoverThemes($root);
+        if ($items === []) {
+            echo "(no themes)\n";
+            break;
+        }
+        usort($items, static fn($a, $b) => strcmp((string)$a['name'], (string)$b['name']));
+        $active = PluginManager::activeTheme();
+        foreach ($items as $m) {
+            $state = ($m['name'] ?? null) === $active ? 'active' : '';
+            echo ($m['name'] ?? '?') . ' | ' . ($m['version'] ?? '?') . ' | ' . $state . "\n";
+        }
+        break;
+
+    case 'enable':
+    case 'disable':
+        $name = trim((string)($args[1] ?? ''));
+        $known = array_column(PluginManager::discoverPlugins($root), 'name');
+        if ($name === '' || !in_array($name, $known, true)) {
+            fwrite(STDERR, "usage: $cmd <plugin-name>  (known: " . implode(', ', $known) . ")\n");
+            exit(1);
+        }
+        $enabled = PluginManager::enabledPlugins();
+        if ($cmd === 'enable') {
+            if (!in_array($name, $enabled, true)) {
+                $enabled[] = $name;
+            }
+        } else {
+            $enabled = array_values(array_filter($enabled, static fn($n) => $n !== $name));
+        }
+        PluginManager::setEnabledPlugins($enabled);
+        echo ($cmd === 'enable' ? 'enabled ' : 'disabled ') . $name . "\n";
+        break;
+
+    case 'theme:use':
+        $name = trim((string)($args[1] ?? ''));
+        $known = array_column(PluginManager::discoverThemes($root), 'name');
+        if ($name === '' || !in_array($name, $known, true)) {
+            fwrite(STDERR, "usage: theme:use <theme-name>  (known: " . implode(', ', $known) . ")\n");
+            exit(1);
+        }
+        PluginManager::setActiveTheme($name);
+        echo "active theme: " . $name . "\n";
+        break;
+
+    case 'settings':
+    case 'settings:set':
+        $name = trim((string)($args[1] ?? ''));
+        if ($name === '') {
+            fwrite(STDERR, "usage: $cmd <plugin> [<key> <value>]\n");
+            exit(1);
+        }
+        $file = CACHE_DIR . 'settings/' . $name . '.json';
+        $data = [];
+        if (is_file($file)) {
+            $raw = json_decode((string)file_get_contents($file), true);
+            if (is_array($raw)) {
+                $data = $raw;
+            }
+        }
+        if ($cmd === 'settings') {
+            echo json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . "\n";
+            break;
+        }
+        $key = (string)($args[2] ?? '');
+        $val = (string)($args[3] ?? '');
+        if ($key === '') {
+            fwrite(STDERR, "usage: settings:set <plugin> <key> <value>\n");
+            exit(1);
+        }
+        $decoded = json_decode($val, true);
+        $data[$key] = json_last_error() === JSON_ERROR_NONE ? $decoded : $val;
+        if (!is_dir(dirname($file))) {
+            @mkdir(dirname($file), 0755, true);
+        }
+        file_put_contents($file, json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . "\n");
+        echo "set " . $name . "." . $key . "\n";
         break;
 
     case 'doctor':
