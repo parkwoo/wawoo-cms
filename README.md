@@ -270,6 +270,7 @@ server {
         root /var/www;
         # deny non-public data: cache/includes/plugins, markdown, json
         location ~ ^/blog/(cache|includes|plugins)/ { return 404; }
+        location ~ ^/blog/uploads/.*\.svg$ { return 404; }  # user SVG (XSS)
         location ~* \.(md|markdown|json|log|lock|sql|sh)$ { return 404; }
         location ~ ^/blog/(\.env|config\.local\.php|composer\.(json|lock)|README\.md|CHANGELOG\.md|VERSION)$ { return 404; }
         try_files $uri $uri/ /blog/router.php?$args;

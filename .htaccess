@@ -7,6 +7,8 @@ RewriteEngine On
 # without invoking router.php.
 <IfModule mod_rewrite.c>
     RewriteRule ^(cache|includes|plugins)/ - [F,L,NC]
+    # User-uploaded SVG can carry script; never serve it inline.
+    RewriteRule ^uploads/.*\.svg$ - [F,L,NC]
     RewriteRule ^themes/.*\.php$ - [F,L,NC]
     RewriteRule ^\.git(/|$) - [F,L,NC]
     RewriteRule ^(config\.local\.php|\.env|composer\.(json|lock)|README\.md|CHANGELOG\.md|VERSION)$ - [F,L,NC]
