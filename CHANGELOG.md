@@ -19,7 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   manage everything without a UI.
 - `config.example.php` default `ENABLED_PLUGINS` = `seo`, `menu`, `contact`.
 - GitHub Actions CI: PHP 8.2 & 8.3, `php -l`, full core PHPUnit 9.6 suite
-  (187 tests) via phar (no composer).
+  (195 tests) via phar (no composer).
 
 ### Themes
 - The `clay` theme now ships in core (`themes/clay/`); the standalone

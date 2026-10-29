@@ -23,7 +23,21 @@ What makes it agent-friendly:
   don't need, or read the enabled list in one glance from
   `config.local.php`.
 
-**Version:** 2.0.0 · **Tests:** 187 PHPUnit · **PHP files:** 84+ · **Lines:** ~9,400
+**Version:** 2.0.0 · **Tests:** 195 PHPUnit · **PHP files:** 84+ · **Lines:** ~9,400
+
+## Screenshots
+
+| Default theme | Clay theme |
+|---|---|
+| ![Default theme home](docs/screenshots/default-home.png) | ![Clay theme home](docs/screenshots/clay-home.png) |
+
+Markdown rendering — headings, tables, quotes, code and figure captions, with a table of contents:
+
+![Post page with rich markdown](docs/screenshots/default-post.png)
+
+The admin console ships its own **Admin One (Bulma)** theme, independent of the front-end:
+
+![Admin console login](docs/screenshots/admin-login.png)
 
 ## Layout
 
@@ -655,7 +669,7 @@ php -l includes/core/Bootstrap.php
 
 ## License
 
-Released under the [MIT License](LICENSE).
+Released under the [MIT License](LICENSE). Copyright © 2026 **wawoo.jp**.
 
 ## Contributing & security
 
