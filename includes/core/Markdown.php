@@ -19,6 +19,10 @@ final class Markdown
                 self::$parser->setSafeMode(true);
             }
         }
+        // Drop HTML comments before parsing: Parsedown safe mode disables its
+        // comment block, so `<!-- ... -->` would otherwise render as escaped
+        // paragraph text. Fenced code blocks are preserved verbatim.
+        $text = self::stripComments($text);
         $html = self::$parser->text($text);
         if ($imageBase !== '') {
             $html = self::resolveRelativeImageSrcs($html, $imageBase);
@@ -30,6 +34,49 @@ final class Markdown
             $html = self::toFigures($html);
         }
         return $html;
+    }
+
+    /**
+     * Remove HTML comments before parsing (safe mode otherwise surfaces them
+     * as escaped text). Lines inside fenced code blocks are left untouched.
+     */
+    private static function stripComments(string $text): string
+    {
+        $fence = null;
+        $inComment = false;
+        return (string) preg_replace_callback('/^.*$/m', static function (array $m) use (&$fence, &$inComment): string {
+            $line = $m[0];
+            if ($inComment) {
+                $end = strpos($line, '-->');
+                if ($end === false) {
+                    return '';
+                }
+                $inComment = false;
+                $line = substr($line, $end + 3);
+            }
+            if ($fence !== null) {
+                if (preg_match('/^ {0,3}(`{3,}|~{3,})\s*$/', $line, $c) && $c[1][0] === $fence[0] && strlen($c[1]) >= strlen($fence)) {
+                    $fence = null;
+                }
+                return $line;
+            }
+            if (preg_match('/^ {0,3}(`{3,}|~{3,})(.*)$/', $line, $o) && !($o[1][0] === '`' && strpos($o[2], '`') !== false)) {
+                $fence = $o[1];
+                return $line;
+            }
+            $out = '';
+            $pos = 0;
+            while (($start = strpos($line, '<!--', $pos)) !== false) {
+                $out .= substr($line, $pos, $start - $pos);
+                $end = strpos($line, '-->', $start + 4);
+                if ($end === false) {
+                    $inComment = true;
+                    return $out;
+                }
+                $pos = $end + 3;
+            }
+            return $out . substr($line, $pos);
+        }, $text);
     }
 
     /**

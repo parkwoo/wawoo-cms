@@ -62,18 +62,24 @@ final class PluginManager
     public static function setEnabledPlugins(array $enabled): void
     {
         $f = \CACHE_DIR . 'plugins.json';
-        if (!is_dir(\CACHE_DIR)) {
-            @mkdir(\CACHE_DIR, 0755, true);
+        if (!is_dir(\CACHE_DIR) && !@mkdir(\CACHE_DIR, 0755, true) && !is_dir(\CACHE_DIR)) {
+            error_log('[wawoo-cms] cannot create cache dir: ' . \CACHE_DIR);
+            return;
         }
-        file_put_contents($f, json_encode(['enabled' => array_values($enabled)], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+        if (file_put_contents($f, json_encode(['enabled' => array_values($enabled)], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)) === false) {
+            error_log('[wawoo-cms] cannot write ' . $f);
+        }
     }
 
     public static function setActiveTheme(string $theme): void
     {
         $f = \CACHE_DIR . 'themes.json';
-        if (!is_dir(\CACHE_DIR)) {
-            @mkdir(\CACHE_DIR, 0755, true);
+        if (!is_dir(\CACHE_DIR) && !@mkdir(\CACHE_DIR, 0755, true) && !is_dir(\CACHE_DIR)) {
+            error_log('[wawoo-cms] cannot create cache dir: ' . \CACHE_DIR);
+            return;
         }
-        file_put_contents($f, json_encode(['active' => $theme], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+        if (file_put_contents($f, json_encode(['active' => $theme], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)) === false) {
+            error_log('[wawoo-cms] cannot write ' . $f);
+        }
     }
 }

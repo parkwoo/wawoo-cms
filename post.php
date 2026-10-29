@@ -21,7 +21,7 @@ if ($slug === '' || strlen($slug) > 120) {
 }
 
 $lang = '';
-if (isset($_GET['mlang']) && in_array((string)$_GET['mlang'], ['ja', 'zh'], true)) {
+if (isset($_GET['mlang']) && \Wawoo\Core\Langs::isSupported((string)$_GET['mlang'])) {
     $lang = (string)$_GET['mlang'];
 }
 

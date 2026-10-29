@@ -73,6 +73,7 @@ require $root . '/includes/core/Cache.php';
 require $root . '/includes/core/RateLimit.php';
 require $root . '/includes/core/Crypto.php';
 require $root . '/includes/core/Csp.php';
+require $root . '/includes/core/Langs.php';
 require $root . '/includes/core/Url.php';
 require $root . '/includes/core/PluginManager.php';
 require $root . '/includes/core/Bootstrap.php';

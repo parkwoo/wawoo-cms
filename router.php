@@ -21,6 +21,7 @@
 declare(strict_types=1);
 
 require __DIR__ . '/includes/core/PublicAssets.php';
+require __DIR__ . '/includes/core/Langs.php';
 
 $root = __DIR__;
 
@@ -55,14 +56,14 @@ if ($path === '/' || $path === '') {
 // language implied; adding a language means extending this list, the same
 // whitelist in post.php/page.php, and the $lang suffix resolution in
 // Posts::mdFile / Pages::mdFile.
-if (preg_match('#^/(ja|zh)/post/([a-zA-Z0-9_-]+)$#', $path, $m)) {
+if (preg_match('#^/(' . \Wawoo\Core\Langs::alternation() . ')/post/([a-zA-Z0-9_-]+)$#', $path, $m)) {
     $_GET['slug']  = $m[2];
     $_GET['mlang'] = $m[1];
     require $root . '/post.php';
     return true;
 }
 
-if (preg_match('#^/(ja|zh)/([a-zA-Z0-9_-]+)$#', $path, $m)) {
+if (preg_match('#^/(' . \Wawoo\Core\Langs::alternation() . ')/([a-zA-Z0-9_-]+)$#', $path, $m)) {
     $slug = $m[2];
     $bundle = $root . '/pages/' . $slug . '/index.md';
     $flat   = $root . '/pages/' . $slug . '.md';
