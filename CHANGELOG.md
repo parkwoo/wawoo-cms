@@ -210,5 +210,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Comment submissions are rate-limited per IP, validated, and require
   manual approval by default.
 
-[Unreleased]: https://example.com/wawoo-cms/compare/v1.0.0...HEAD
-[1.0.0]: https://example.com/wawoo-cms/releases/tag/v1.0.0
+[Unreleased]: https://github.com/parkwoo/wawoo-cms/compare/v2.0.0...HEAD
+[2.0.0]: https://github.com/parkwoo/wawoo-cms/compare/v1.0.0...v2.0.0
+[1.0.0]: https://github.com/parkwoo/wawoo-cms/releases/tag/v1.0.0

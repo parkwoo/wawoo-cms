@@ -12,7 +12,7 @@
 # the volumes.
 services:
   wawoo:
-    image: ghcr.io/your-org/wawoo-cms:1.0.0
+    image: ghcr.io/your-org/wawoo-cms:2.0.0
     ports:
       - "127.0.0.1:8080:80"  # bind to localhost only; proxy in front
     environment:
@@ -37,7 +37,7 @@ services:
   # One-shot chown so the Apache worker (www-data) can write the named
   # volumes. Runs before the main service on first deploy.
   init-volumes:
-    image: ghcr.io/your-org/wawoo-cms:1.0.0
+    image: ghcr.io/your-org/wawoo-cms:2.0.0
     user: root
     volumes:
       - wawoo_posts:/var/www/html/posts
